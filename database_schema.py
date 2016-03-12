@@ -63,24 +63,24 @@ try:
     cnx.database = DB_NAME    
 except mysql.connector.Error as err:
     if err.errno == errorcode.ER_BAD_DB_ERROR:
-        # create_database(cursor)
-        delete_database(cursor)
+        create_database(cursor)
+        # delete_database(cursor)
         cnx.database = DB_NAME
     else:
         print(err)
         exit(1)
 
-# for name, ddl in TABLES.iteritems():
-#     try:
-#         print("Creating table {}: ".format(name), end='')
-#         cursor.execute(ddl)
-#     except mysql.connector.Error as err:
-#         if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
-#             print("already exists.")
-#         else:
-#             print(err.msg)
-#     else:
-#         print("OK")
+for name, ddl in TABLES.iteritems():
+    try:
+        print("Creating table {}: ".format(name), end='')
+        cursor.execute(ddl)
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_TABLE_EXISTS_ERROR:
+            print("already exists.")
+        else:
+            print(err.msg)
+    else:
+        print("OK")
 
 cursor.close()
 cnx.close()
