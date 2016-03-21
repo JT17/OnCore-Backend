@@ -13,6 +13,13 @@ class Appointment(Base):
 		self.user_id = user_id 
 		self.date = date 
 
+	def serialize(self):
+		"""Return object data in easily serializable format"""
+		return{
+			'id':self.id,
+			'user_id':self.user_id,
+			'date':self.date
+		}
 	def __repr__(self):
 		return '<User %r>' % self.user_id
 
@@ -41,16 +48,17 @@ class Address(Base):
 	id = Column(Integer, primary_key=True)
 	street_num = Column(Integer, nullable=True);
 	street_name = Column(String(250), nullable=True);
-	stret_type = Column(String(250), nullable=True);
+	street_type = Column(String(250), nullable=True);
 	city_name = Column(String(250), nullable=True);
 	zipcode = Column(Integer, nullable=True);
 	district = Column(String(250), nullable=True);
 	
-	def __init__(self, street_number, street_name, street_type, city_name, 
-			zipcode, district): 
+	def __init__(self, street_number=None, street_name=None, street_type=None, city_name=None, 
+			zipcode=None, district=None): 
 		self.street_num = street_number;
 		self.street_name = street_name;
 		self.street_type = street_type;
 		self.city_name = city_name;
 		self.zipcode = zipcode;
 		self.district = district
+	
