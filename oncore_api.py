@@ -1,16 +1,15 @@
-from database import db_session
-from models import *
+from application import db
+from application.models import *
 from flask import Flask, request, redirect, jsonify
-from start_server import app
 
 def add_appt(request):
 	if 'user_id' in request.form and 'date' in request.form:
 		new_appt = Appointment(request.form['user_id'], request.form['date']);
 		try:
-			db_session.add(new_appt);
-			db_session.commit();
+			db.session.add(new_appt);
+			db.session.commit();
 		except:
-			db_session.flush();
+			db.session.flush();
 			return str("Could not create new appt :( something went wrong");
 		return str("Successfully added a new appt!");
 	else:
@@ -39,18 +38,18 @@ def add_user(request):
 		user_addr.distrcit = request.form['district'];
 	
 	try:
-		db_session.add(user_addr);
-		db_session.flush();
+		db.session.add(user_addr);
+		db.session.flush();
 	except:
-		db_session.flush();
+		db.session.flush();
 		return str("Could not create address for user something went wrong :(");
 
 	new_user = User(request.form['firstname'], request.form['lastname'], request.form['phone_number'], request.form['contact_number'], user_addr.id);
 	try:
-		db_session.add(new_user);
-		db_session.commit();
+		db.session.add(new_user);
+		db.session.commit();
 	except:
-		db_session.flush();
+		db.session.flush();
 		return str("Could not create user something went wrong sorry :(");
 	return str("Successfully created user!");
 

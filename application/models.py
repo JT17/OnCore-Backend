@@ -1,9 +1,9 @@
+from application import db
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
-from database import Base
 
-class Appointment(Base):
+class Appointment():
 	__tablename__ = 'appointments'
 	id = Column(Integer, primary_key=True)
 	user_id= Column(String(80),ForeignKey('users.id'))
@@ -23,9 +23,9 @@ class Appointment(Base):
 	def __repr__(self):
 		return '<User %r>' % self.user_id
 
-class User(Base):
-	__table__ = 'users'
-
+class User():
+	__tablename__ = 'users'
+	
 	#user_id is going to be id, so we assign this based on nfc
 	id = Column(Integer, primary_key=True)
 	firstname = Column(String(250), nullable=False);
@@ -47,7 +47,7 @@ class Manager(User):
 
 class Patient(User):
 
-class Address(Base):
+class Address():
 	__tablename__ = 'addresses'
 
 	id = Column(Integer, primary_key=True)
