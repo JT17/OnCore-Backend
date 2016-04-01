@@ -17,6 +17,9 @@ def add_appt(request):
 		return str("Could not create new appt :( missing post values");
 
 def add_user(request):
+	firstname = request.json.get('firstname');
+	if firstname is None:
+		return str("firstname is none as caught by the json get");
 	if 'firstname' not in request.form or 'lastname' not in request.form or 'phone_number' not in request.form \
 		or 'contact_number' not in request.form: 
 		return str("Could not create new user, missing form values :(");

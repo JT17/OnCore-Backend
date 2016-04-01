@@ -24,8 +24,8 @@ class Appointment(Base):
 		return '<User %r>' % self.user_id
 
 class User(Base):
-	__tablename__ = 'users'
-	
+	__table__ = 'users'
+
 	#user_id is going to be id, so we assign this based on nfc
 	id = Column(Integer, primary_key=True)
 	firstname = Column(String(250), nullable=False);
@@ -41,6 +41,11 @@ class User(Base):
 		self.phone_number = phone_number;
 		self.contact_number = contact_number;
 		self.address_id = address_id;
+class Manager(User):
+	__table__ = 'managers'
+
+
+class Patient(User):
 
 class Address(Base):
 	__tablename__ = 'addresses'
