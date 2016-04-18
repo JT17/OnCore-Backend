@@ -1,9 +1,11 @@
-from application import db
 from flask import Flask
+from passlib.apps import custom_app_context as pwd_context
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
+from __init__ import db
 
-class Appointment():
+class Appointment(db.Model):
 	__tablename__ = 'appointments'
 	id = Column(Integer, primary_key=True)
 	user_id= Column(String(80),ForeignKey('users.id'))
@@ -23,7 +25,7 @@ class Appointment():
 	def __repr__(self):
 		return '<User %r>' % self.user_id
 
-class User():
+class User(db.Model):
 	__tablename__ = 'users'
 	
 	#user_id is going to be id, so we assign this based on nfc
@@ -33,7 +35,13 @@ class User():
 	phone_number = Column(Integer, nullable=False);
 	contact_number = Column(Integer, nullable=False);
 	address_id = Column(Integer, ForeignKey('addresses.id'));
+	type = Column(String(50))
 	
+	__mapper_args__ = {
+		'polymorphic_identity':'user',
+		'polymorphic_on':type
+	}
+
 	def __init__(self, firstname, lastname, phone_number, contact_number,
 			address_id):
 		self.firstname = firstname;
@@ -41,13 +49,50 @@ class User():
 		self.phone_number = phone_number;
 		self.contact_number = contact_number;
 		self.address_id = address_id;
-class Manager(User):
-	__table__ = 'managers'
+	
+	def generate_auth_token(self, expiration=6000):
+		s = Serializer(app.config['SECRET_KEY'], expires_in=expiration);
+		return s.dumps({'id':self.id})
+	
+	@staticmethod
+	def verify_auth_token(token):
+		s = Serializer(application.config['SECRET_KEY'])
+		try:
+			data = s.loads(token)
+		except SignatureExpired:
+			return None
+		except BadSignature:
+		 	return None
+		user = User.query.get(data['id']);
+		return user;	
 
+class Manager(User):
+	__tablename__ = 'managers'
+
+	id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+	password = Column(String(128))
+	__mapper_args__ = {
+		'polymorphic_identity':'manager',
+	}
+	def __init__(self, password):
+		self.password = pwd_context.encrypt(password) 
+	
+	def verify_password(self, password):
+		return pwd_context.verify(password, self.password);
 
 class Patient(User):
+	__tablename__ = 'patients'
 
-class Address():
+	id = Column(Integer, ForeignKey('users.id'), primary_key = True)
+	manager_id = Column(Integer, ForeignKey('manager.id'))
+
+	__mapper_args__ = {
+		'polymorphic_identity':'patient',
+	}
+
+	def __init__(self, manager_id):
+		self.manager_id = manager_id
+class Address(db.Model):
 	__tablename__ = 'addresses'
 
 	id = Column(Integer, primary_key=True)
