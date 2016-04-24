@@ -1,6 +1,5 @@
-from application import db
 from application.models import *
-from flask import Flask, request, redirect, jsonify
+from flask import Flask, request, redirect, jsonify, g
 
 def add_appt(request):
 	print "add_appt2"
@@ -20,7 +19,12 @@ def add_appt(request):
 		print "wrong2"
 		return str("Could not create new appt :( missing post values");
 
+
+	
 def add_user(request):
+	firstname = request.json.get('firstname');
+	if firstname is None:
+		return str("firstname is none as caught by the json get");
 	if 'firstname' not in request.form or 'lastname' not in request.form or 'phone_number' not in request.form \
 		or 'contact_number' not in request.form: 
 		return str("Could not create new user, missing form values :(");
@@ -37,7 +41,7 @@ def add_user(request):
 	if request.form.has_key('zipcode'):
 		user_addr.zipcode = request.form['zipcode'];
 	if request.form.has_key('district'):
-		user_addr.distrcit = request.form['district'];
+		user_addr.district = request.form['district'];
 	
 	try:
 		db.session.add(user_addr);
@@ -45,7 +49,7 @@ def add_user(request):
 	except:
 		db.session.rollback()
 		# db.session.flush();
-		return str("Could not create address for user something went wrong :(");
+		raise ValueError("Could not create address for user something went wrong :(");
 
 	new_user = User(request.form['firstname'], request.form['lastname'], request.form['phone_number'], request.form['contact_number'], user_addr.id);
 	try:
@@ -53,9 +57,57 @@ def add_user(request):
 		db.session.commit();
 	except:
 		db.session.rollback()
-		#db.session.flush();
-		return str("Could not create user something went wrong sorry :(");
+		# db.session.flush();
+		raise ValueError("Could not create user something went wrong sorry :(");
 	return str("Successfully created user!");
+
+	return 0;
+	
+def add_patient(request):
+	try:
+		add_user(request);
+	except ValueError as err:
+		return err.args
+	
+	if request.form.has_key('manager_id'):
+		manager = Manager.query.filter(Manager.id == request.form['manager_id'])
+		if manager == None:
+			return str("Sorry incorrect manager id, please resend form")
+		else:
+			patient = Patient(request.form['manager_id']);
+			try:
+				db.session.add(patient);
+				db.session.commit();
+			except:
+				db.session.flush();
+				raise ValueError("Could not create patient, something went wrong sorry");
+	return str("Successfully added patient");
+
+
+def add_manager(request):
+	try:
+		add_user(request);
+	except ValueError as err:
+		return err.args;
+	
+	if request.form.has_key('password'):
+		manager = Manager(request.form['password']);
+		try:
+			db.session.add(manager);
+			db.session.commit();
+		except:
+			db.session.flush();
+			raise ValueError("Could not create manager, something went wrong sorry");
+	return str("Successfully created manager");
+
+def verify_password(self, username_or_token, password):
+	user = User.verify_auth_token(username_or_token)
+	if not user:
+		mgr = Manager.query.filter_by(username = username_or_token).first();
+		if not user or not mgr.verify_password(password, self.password):
+			return False;
+	g.user = user
+	return True;
 
 def get_user_appts(request):
 	import json
@@ -63,7 +115,6 @@ def get_user_appts(request):
 		return str("Could not get appts, missing form values :(");
 #	try:
 	appts = Appointment.query.filter(Appointment.user_id == request.form['user_id'])
-	print appts[0]
 	return jsonify(json_list=[i.serialize() for i in appts.all()])
 #	except:
 #		return str("Couldn't fetch your appointments something went wrong :(");

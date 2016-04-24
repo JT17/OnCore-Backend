@@ -8,11 +8,12 @@ Step-by-step tutorial: https://medium.com/@rodkey/deploying-a-flask-application-
 '''
 
 from flask import Flask, render_template, request
+from flask.ext.httpauth import HTTPBasicAuth
 from application import db
 from application.models import *
 from application.forms import *
 
-from flask import Flask, request, redirect, jsonify
+from flask import Flask, request, redirect, jsonify, g
 import twilio.twiml
 import speranza_api
 
@@ -22,6 +23,17 @@ app.debug=True
 # change this to your own value
 # app.secret_key = 'cC1YCIWOj9GgWspgNEo2'   
 app.secret_key = 'asdf'  
+auth = HTTPBasicAuth()
+
+@auth.verify_password
+def verify_passowrd(username_or_token, pwd):
+	return oncore_api.verify_password(username_or_token, pwd);
+
+@app.route('/api/token')
+@auth.login_required
+def get_auth_token():
+	token = g.user.generate_auth_token()
+	return jsonify({'token':token.decode('ascii')})
 
 @app.route('/hello_monkey', methods=['GET', 'POST'])
 def hello_monkey():
