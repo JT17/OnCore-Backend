@@ -3,10 +3,11 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 
-class Appointment():
+class Appointment(db.Model):
 	__tablename__ = 'appointments'
 	id = Column(Integer, primary_key=True)
-	user_id= Column(String(80),ForeignKey('users.id'))
+	# user_id = Column(Integer,ForeignKey('users.id'))
+	user_id = Column(String(80), nullable=False)
 	date = Column(DateTime, nullable=False)
 
 	def __init__(self, user_id, date):
@@ -23,7 +24,7 @@ class Appointment():
 	def __repr__(self):
 		return '<User %r>' % self.user_id
 
-class User():
+class User(db.Model):
 	__tablename__ = 'users'
 	
 	#user_id is going to be id, so we assign this based on nfc
@@ -42,7 +43,7 @@ class User():
 		self.contact_number = contact_number;
 		self.address_id = address_id;
 
-class Address():
+class Address(db.Model):
 	__tablename__ = 'addresses'
 
 	id = Column(Integer, primary_key=True)

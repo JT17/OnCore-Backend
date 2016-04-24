@@ -18,7 +18,7 @@
 <body>
 
 <div align="center">
-  <h2>OnCore Test Server</h2>
+  <h2>Speranza Test Server</h2>
 </div>
 
 <hr>
@@ -39,7 +39,7 @@
           <div class='col-md-4'>
               <div class="form-group">
                   <div class='input-group date' id='datetimepicker1'>
-                      <input type='text' class="form-control" />
+                      <input type='text' class="form-control" name="date" />
                       <span class="input-group-addon">
                           <span class="glyphicon glyphicon-calendar"></span>
                       </span>
@@ -97,6 +97,15 @@
 
 <div align="left">
   <h2>Appointment List</h2>
+     <table class="table table-striped table-hover">
+      <thead>
+      {% for z in appts %}
+          <tr>
+            <td>{{z.user_id}}</td>
+          </tr>
+      {% endfor %}
+      </tbody>
+    </table>
 </div>
 
 </div>

@@ -14,7 +14,7 @@ from application.forms import *
 
 from flask import Flask, request, redirect, jsonify
 import twilio.twiml
-import oncore_api
+import speranza_api
 
 # Elastic Beanstalk initalization
 app = Flask(__name__)
@@ -31,18 +31,19 @@ def hello_monkey():
 
 @app.route('/add_appt', methods=['GET', 'POST'])
 def add_appt():
-    oncore_api.add_appt(request);
+    print "add_appt"
+    speranza_api.add_appt(request);
     return redirect('/');
 
 
 @app.route('/add_user', methods=['GET', 'POST'])
 def add_user():
-    oncore_api.add_user(request);
+    speranza_api.add_user(request);
     return redirect('/');
 
 @app.route('/get_user_appts', methods=['GET', 'POST'])
 def get_user_appts():
-    oncore_api.get_user_appts(request);
+    speranza_api.get_user_appts(request);
     return redirect('/');
 
 @app.route("/", methods=['GET', 'POST'])
@@ -73,7 +74,16 @@ def index():
     #     return render_template('results.html', results=query_db, num_return=num_return)                
     
     #return render_template('index.html', appointmentForm=form1)
-    return render_template('index.html')
+    # try:   
+    appts = Appointment.query.order_by(Appointment.id.desc())
+    # print appts[0]
+    #db.session.close()
+    #except:
+    #    db.session.rollback()
+    #if len(appts) > 0:
+    #   print appts[0]
+    db.session.rollback()
+    return render_template('index.html', appts=appts)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
