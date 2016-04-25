@@ -27,7 +27,7 @@ auth = HTTPBasicAuth()
 
 @auth.verify_password
 def verify_passowrd(username_or_token, pwd):
-	return oncore_api.verify_password(username_or_token, pwd);
+	return speranza_api.verify_password(username_or_token, pwd);
 
 @app.route('/api/token')
 @auth.login_required
@@ -48,10 +48,20 @@ def add_appt():
     return redirect('/');
 
 
+@app.route('/add_patient', methods=['GET', 'POST'])
+def add_patient():
+    speranza_api.add_patient(request);
+    return redirect('/');
+
 @app.route('/add_user', methods=['GET', 'POST'])
 def add_user():
-    speranza_api.add_user(request);
-    return redirect('/');
+	speranza_api.add_user(request, "manager");
+	return redirect('/');
+
+@app.route('/add_manager', methods=['GET', 'POST'])
+def add_manager():
+	speranza_api.add_manager(request);
+	return redirect('/');
 
 @app.route('/get_user_appts', methods=['GET', 'POST'])
 def get_user_appts():

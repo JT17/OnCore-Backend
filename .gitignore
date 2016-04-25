@@ -1,4 +1,4 @@
-
+*.pyc #don't need the python object files to be pushed
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
