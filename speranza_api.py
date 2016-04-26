@@ -4,11 +4,19 @@ from flask import Flask, request, redirect, jsonify, g
 def add_appt(request):
 	print "add_appt2"
 	if 'user_id' in request.form and 'date' in request.form:
-		new_appt = Appointment(request.form['user_id'], request.form['date']);
+		import datetime
+		timestamp = datetime.datetime.fromtimestamp(int(request.form['date']));
+		new_appt = Appointment(request.form['user_id'], timestamp);
+		#error check that manager making appt is the patient's manager
+		patient = Patient.query.filter(Patient.id == request.form['user_id']).first();
+		auth = request.authorization
+		if patient.manager_id != int(auth.username):
+			return str("Wrong manager");
 		try:
 			db.session.add(new_appt);
 			db.session.commit();
-		except:
+		except Exception, e:
+			print str(e);
 			db.session.rollback()
 			#db.session.flush();
 			print "wrong"
@@ -55,13 +63,14 @@ def add_patient(request):
 		patient_addr = add_address(request);
 	except ValueError as err:
 		return err.args
-	if request.form.has_key('manager_id'):
-		manager = Manager.query.filter(Manager.id == request.form['manager_id'])
+	auth = request.authentication
+	if auth.username:
+		manager = Manager.query.filter(Manager.id == int(auth.username))
 		if manager == None:
 			return str("Sorry incorrect manager id, please resend form")
 		else:
 			patient = Patient(request.form['firstname'], request.form['lastname'], request.form['phone_number'],
-					request.form['contact_number'], patient_addr.id, manager.id);
+					request.form['contact_number'], patient_addr.id, int(auth.username));
 			try:
 				db.session.add(patient);
 				db.session.commit();
@@ -69,7 +78,7 @@ def add_patient(request):
 				db.session.flush();
 				raise ValueError("Could not create patient, something went wrong sorry");
 	else:
-		return str("Need a manager_id");
+		return str("Need a manager");
 	return str("Successfully added patient");
 
 
@@ -89,25 +98,44 @@ def add_manager(request):
 		except ValueError:
 			db.session.flush();
 			raise ValueError("Could not create manager, something went wrong sorry");
-	return str("Successfully created manager");
+		return str("Successfully created manager with id " + str(manager.id));
+	else:
+		return str("No password entered");
 
-def verify_password(username_or_token, password):
-	user = User.verify_auth_token(username_or_token)
-	if not user:
-		mgr = Manager.query.filter_by(id = username_or_token).first();
-		if not user or not mgr.verify_password(password, self.password):
+def get_managers(request):
+	managers = Manager.query.all();
+	return managers;
+def get_patients(request):
+	pts = Patient.query.all();
+	return pts;
+
+def verify_password(username, password_or_token):
+	print password_or_token 
+	mgr = Manager.verify_auth_token(password_or_token)
+	if not mgr:
+		mgr = Manager.query.filter_by(id = username).first();
+		print "calling mgr.verify_password:"
+		print mgr.verify_password(password_or_token);
+		if not mgr or not mgr.verify_password(password_or_token):
 			return False;
-	g.user = user
+	g.manager= mgr 
 	return True;
 
 def get_user_appts(request):
 	import json
 	if 'user_id' not in request.form:
 		return str("Could not get appts, missing form values :(");
-#	try:
-	appts = Appointment.query.filter(Appointment.user_id == request.form['user_id'])
-	return jsonify(json_list=[i.serialize() for i in appts.all()])
-#	except:
-#		return str("Couldn't fetch your appointments something went wrong :(");
-	return str(resp);
+	try:
+		auth = request.authorization
+		user = Patient.query.filter(Patient.id == request.form['user_id']).first()
+		if user.manager_id != int(auth.username):
+			return str("Invalid manager id");	
+		appts = Appointment.query.filter(Appointment.user_id == request.form['user_id'])
+		all_appts = Appointment.query.all()
+		print len(all_appts)
+		for val in all_appts:
+			print val.user_id
+		return jsonify(json_list=[i.serialize() for i in appts.all()])
+	except ValueError:
+		return str("Couldn't fetch your appointments something went wrong :(");
 

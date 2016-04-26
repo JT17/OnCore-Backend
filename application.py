@@ -26,47 +26,62 @@ app.secret_key = 'asdf'
 auth = HTTPBasicAuth()
 
 @auth.verify_password
-def verify_passowrd(username_or_token, pwd):
+def verify_password(username_or_token, pwd):
 	return speranza_api.verify_password(username_or_token, pwd);
 
 @app.route('/api/token')
 @auth.login_required
 def get_auth_token():
-	token = g.user.generate_auth_token()
+	token = g.manager.generate_auth_token()
 	return jsonify({'token':token.decode('ascii')})
 
 @app.route('/hello_monkey', methods=['GET', 'POST'])
+@auth.login_required
 def hello_monkey():
     resp = twilio.twiml.Response();
     resp.message("Hello, Mobile Monkey");
     return str(resp)
 
 @app.route('/add_appt', methods=['GET', 'POST'])
+@auth.login_required
 def add_appt():
     print "add_appt"
-    speranza_api.add_appt(request);
-    return redirect('/');
+    return speranza_api.add_appt(request);
 
 
 @app.route('/add_patient', methods=['GET', 'POST'])
+@auth.login_required
 def add_patient():
     speranza_api.add_patient(request);
     return redirect('/');
 
-@app.route('/add_user', methods=['GET', 'POST'])
-def add_user():
-	speranza_api.add_user(request, "manager");
-	return redirect('/');
 
 @app.route('/add_manager', methods=['GET', 'POST'])
 def add_manager():
-	speranza_api.add_manager(request);
-	return redirect('/');
+	print request.form
+	return speranza_api.add_manager(request);
 
+#this is a testing function but should not be exposed to any actual users
+#@app.route('/get_managers', methods=['GET', 'POST'])
+def get_managers():
+	mgrs = speranza_api.get_managers(request);
+	for val in mgrs:
+		print val.id
+		print val.password
+	return redirect('/');
+#also a testing function
+@app.route('/get_patients', methods=['GET', 'POST'])
+def get_patients():
+	pts = speranza_api.get_patients(request);
+	for val in pts:
+		print val.firstname
+		print val.id
+		print val.manager_id
+	return redirect('/');
 @app.route('/get_user_appts', methods=['GET', 'POST'])
+@auth.login_required
 def get_user_appts():
-    speranza_api.get_user_appts(request);
-    return redirect('/');
+    return speranza_api.get_user_appts(request);
 
 @app.route("/", methods=['GET', 'POST'])
 def index():

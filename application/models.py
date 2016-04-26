@@ -8,7 +8,7 @@ from __init__ import db, application as app
 class Appointment(db.Model):
 	__tablename__ = 'appointments'
 	id = Column(Integer, primary_key=True)
-	user_id = Column(Integer,ForeignKey('users.id'))
+	user_id = Column(Integer,ForeignKey('patients.id'))
 	# user_id = Column(String(80), nullable=False)
 	date = Column(DateTime, nullable=False)
 
@@ -30,13 +30,13 @@ class Appointment(db.Model):
 class Manager(db.Model):
 	__tablename__ = 'managers'
 
-	id = Column(Integer, primary_key=True)
-	firstname = Column(String(250), nullable=False);
-	lastname = Column(String(250), nullable=False);
-	phone_number = Column(Integer, nullable=False);
-	contact_number = Column(Integer, nullable=False);
-	address_id = Column(Integer, ForeignKey('addresses.id'));
-	password = Column(String(128))
+	id = db.Column(Integer, primary_key=True);
+	firstname = db.Column(String(250), nullable=False);
+	lastname = db.Column(String(250), nullable=False);
+	phone_number = db.Column(Integer, nullable=False);
+	contact_number = db.Column(Integer, nullable=False);
+	address_id = db.Column(Integer, ForeignKey('addresses.id'));
+	password = db.Column(String(128))
 
 	def __init__(self, firstname, lastname, phone_number, contact_number,
 			address_id, password):
