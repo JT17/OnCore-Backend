@@ -45,7 +45,6 @@ def hello_monkey():
 @app.route('/add_appt', methods=['GET', 'POST'])
 @auth.login_required
 def add_appt():
-    print "add_appt"
     return speranza_api.add_appt(request);
 
 
@@ -62,7 +61,7 @@ def add_manager():
 	return speranza_api.add_manager(request);
 
 #this is a testing function but should not be exposed to any actual users
-#@app.route('/get_managers', methods=['GET', 'POST'])
+@app.route('/get_managers', methods=['GET', 'POST'])
 def get_managers():
 	mgrs = speranza_api.get_managers(request);
 	for val in mgrs:
@@ -70,14 +69,14 @@ def get_managers():
 		print val.password
 	return redirect('/');
 #also a testing function
-@app.route('/get_patients', methods=['GET', 'POST'])
-def get_patients():
-	pts = speranza_api.get_patients(request);
-	for val in pts:
-		print val.firstname
-		print val.id
-		print val.manager_id
-	return redirect('/');
+# @app.route('/get_patients', methods=['GET', 'POST'])
+# def get_patients():
+#	pts = speranza_api.get_patients(request);
+#	for val in pts:
+#		print val.firstname
+#		print val.id
+#		print val.manager_id
+#	return redirect('/');
 @app.route('/get_user_appts', methods=['GET', 'POST'])
 @auth.login_required
 def get_user_appts():
@@ -113,6 +112,7 @@ def index():
     #return render_template('index.html', appointmentForm=form1)
     # try:   
     appts = Appointment.query.order_by(Appointment.id.desc())
+    patients = Patient.query.order_by(Patient.id.desc())
     # print appts[0]
     #db.session.close()
     #except:
@@ -120,7 +120,7 @@ def index():
     #if len(appts) > 0:
     #   print appts[0]
     db.session.rollback()
-    return render_template('index.html', appts=appts)
+    return render_template('index.html', appts=appts, patients=patients)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
