@@ -7,7 +7,7 @@ alias deactivate 'test $?_OLD_VIRTUAL_PATH != 0 && setenv PATH "$_OLD_VIRTUAL_PA
 # Unset irrelevant variables.
 deactivate nondestructive
 
-setenv VIRTUAL_ENV "/Users/alexmarkovits/Dropbox/OnCore/flask-demo/flask-aws"
+setenv VIRTUAL_ENV "/Users/alexmarkovits/Dropbox/Speranza/Speranza-Backend/flask-aws"
 
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/bin:$PATH"
