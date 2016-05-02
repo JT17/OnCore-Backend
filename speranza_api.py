@@ -9,6 +9,8 @@ def add_appt(request):
 		new_appt = Appointment(request.form['user_id'], timestamp);
 		#error check that manager making appt is the patient's manager
 		patient = Patient.query.filter(Patient.id == request.form['user_id']).first();
+		if patient is None:
+			return str("Bad patient id")
 		auth = request.authorization
 		if patient.manager_id != int(auth.username):
 			return str("Wrong manager");
@@ -21,8 +23,7 @@ def add_appt(request):
 			#db.session.flush();
 			print "wrong"
 			return str("Could not create new appt :( something went wrong");
-		print "success"
-		return str("Successfully added a new appt!");
+		return str("success");
 	else:
 		print "wrong2"
 		return str("Could not create new appt :( missing post values");
@@ -63,7 +64,7 @@ def add_patient(request):
 		patient_addr = add_address(request);
 	except ValueError as err:
 		return err.args
-	auth = request.authentication
+	auth = request.authorization
 	if auth.username:
 		manager = Manager.query.filter(Manager.id == int(auth.username))
 		if manager == None:
@@ -79,7 +80,7 @@ def add_patient(request):
 				raise ValueError("Could not create patient, something went wrong sorry");
 	else:
 		return str("Need a manager");
-	return str("Successfully added patient");
+	return str("success")
 
 
 def add_manager(request):
@@ -98,7 +99,9 @@ def add_manager(request):
 		except ValueError:
 			db.session.flush();
 			raise ValueError("Could not create manager, something went wrong sorry");
-		return str("Successfully created manager with id " + str(manager.id));
+		res = {"msg":"success", "mgr_id" : manager.id}
+		print "message: " + res['msg']
+		return res
 	else:
 		return str("No password entered");
 
@@ -110,12 +113,9 @@ def get_patients(request):
 	return pts;
 
 def verify_password(username, password_or_token):
-	print password_or_token 
 	mgr = Manager.verify_auth_token(password_or_token)
 	if not mgr:
 		mgr = Manager.query.filter_by(id = username).first();
-		print "calling mgr.verify_password:"
-		print mgr.verify_password(password_or_token);
 		if not mgr or not mgr.verify_password(password_or_token):
 			return False;
 	g.manager= mgr 
@@ -131,11 +131,10 @@ def get_user_appts(request):
 		if user.manager_id != int(auth.username):
 			return str("Invalid manager id");	
 		appts = Appointment.query.filter(Appointment.user_id == request.form['user_id'])
-		all_appts = Appointment.query.all()
-		print len(all_appts)
+		all_appts = Appointment.query.order_by(Appointment.date).all()
 		for val in all_appts:
 			print val.user_id
-		return jsonify(json_list=[i.serialize() for i in appts.all()])
+		return all_appts 
 	except ValueError:
 		return str("Couldn't fetch your appointments something went wrong :(");
 
