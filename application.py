@@ -78,13 +78,17 @@ def get_managers():
 		print val.password
 	return redirect('/');
 #also a testing function
-#@app.route('/api/get_patients', methods=['GET', 'POST'])
+@app.route('/api/get_patients', methods=['GET', 'POST'])
 def get_patients():
 	pts = speranza_api.get_patients(request);
 	for val in pts:
 		print val.firstname
 		print val.id
-		print val.manager_id
+		print val.phone_number
+		print val.contact_number
+		addr = Address.query.filter(Address.id == val.address_id).first();
+		print addr.street_name;
+		print addr.street_num;
 	return redirect('/');
 @app.route('/api/get_user_appts', methods=['GET', 'POST'])
 @auth.login_required
@@ -96,6 +100,23 @@ def get_user_appts():
 		print type(res)
 		return jsonify(status="200", value = [i.serialize() for i in res]);
 
+@app.route('/api/edit_patient', methods=['GET', 'POST'])
+@auth.login_required
+def edit_patient():
+	res = speranza_api.edit_patient(request);
+	if res['msg'] == 'success':
+		return jsonify(status="200", value = str(res['msg']))
+	else:
+		return jsonify(status="500", value = str(res['msg']))
+
+@app.route('/api/delete_patient', methods = ['GET', 'POST'])
+@auth.login_required
+def delete_patient():
+	res = speranza_api.delete_patient(request);
+	if res['msg'] == 'success':
+		return jsonify(status='200', value = str(res['msg']))
+	else:
+		return jsonify(status='500', value = str(res['msg']))
 @app.route("/", methods=['GET', 'POST'])
 def index():
     # form1 = EnterAppointmentInfo(request.form) 

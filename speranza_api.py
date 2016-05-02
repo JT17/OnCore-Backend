@@ -2,11 +2,7 @@ from application.models import *
 from flask import Flask, request, redirect, jsonify, g
 
 def add_appt(request):
-	print "add_appt2"
-	if 'user_id' in request.form and 'date' in request.form:
-		import datetime
-		timestamp = datetime.datetime.fromtimestamp(int(request.form['date']));
-		new_appt = Appointment(request.form['user_id'], timestamp);
+	if 'user_id' in request.form and 'date' in request.form and 'appt_type' in request.form:
 		#error check that manager making appt is the patient's manager
 		patient = Patient.query.filter(Patient.id == request.form['user_id']).first();
 		if patient is None:
@@ -15,6 +11,9 @@ def add_appt(request):
 		if patient.manager_id != int(auth.username):
 			return str("Wrong manager");
 		try:
+			import datetime
+			timestamp = datetime.datetime.fromtimestamp(int(request.form['date']));
+			new_appt = Appointment(request.form['user_id'], timestamp, request.form['appt_type']);
 			db.session.add(new_appt);
 			db.session.commit();
 		except Exception, e:
@@ -25,7 +24,6 @@ def add_appt(request):
 			return str("Could not create new appt :( something went wrong");
 		return str("success");
 	else:
-		print "wrong2"
 		return str("Could not create new appt :( missing post values");
 
 
@@ -128,6 +126,9 @@ def get_user_appts(request):
 	try:
 		auth = request.authorization
 		user = Patient.query.filter(Patient.id == request.form['user_id']).first()
+		print type(user)
+		if user is None:
+			return str("Invalid user id");
 		if user.manager_id != int(auth.username):
 			return str("Invalid manager id");	
 		appts = Appointment.query.filter(Appointment.user_id == request.form['user_id'])
@@ -137,4 +138,94 @@ def get_user_appts(request):
 		return all_appts 
 	except ValueError:
 		return str("Couldn't fetch your appointments something went wrong :(");
-
+def edit_patient(request):
+	res = {'msg':"something has gone wrong"};
+	if 'user_id' not in request.form:
+		res['msg'] = "Could not edit patient, missing user_id in form";
+		return res;
+	else:
+		try:
+			auth = request.authorization;
+			user = Patient.query.filter(Patient.id == request.form['user_id']).first();
+			if user is None:
+				res['msg'] = "Invalid patient id"
+				return res;
+			if user.manager_id != int(auth.username):
+				res['msg'] = "Invalid manager"
+				return res;
+			if 'phone_number' in request.form:
+				user.phone_number = request.form['phone_number']
+			if 'contact_number' in request.form:
+				user.contact_number = request.form['contact_number']
+			if 'edit_address' in request.form:
+				addr_res = edit_patient_address(request);
+				if addr_res['msg'] != "success":
+					res['msg'] = addr_res['msg']
+					return res;
+			try:
+				db.session.commit();
+				res['msg'] = "success"
+				return res;
+			except:
+				db.session.rollback();
+				res['msg'] = "Something went wrong, couldn't update"
+				return res;
+		except:
+			res['msg'] = "Something went wrong trying to fetch your user_id please try again"
+			return res;
+def edit_patient_address(request):
+	res = {'msg':'something has gone wrong'};
+	if 'user_id' not in request.form:
+		res['msg'] = "Could not edit patient, missing user_id in form";
+		return res;
+	else:
+		user = Patient.query.filter(Patient.id == request.form['user_id']).first();
+		if user is None:
+			res['msg'] = "something went wrong"
+			return res;
+		address = Address.query.filter(Address.id == user.address_id).first()
+		if address is None:
+			res['msg'] = "Something went wrong fetching the address"
+			return res;
+		if 'street_num' in request.form:
+			address.street_num = request.form['street_num']
+		if 'street_name' in request.form:
+			address.street_name = request.form['street_name']
+		if 'street_type' in request.form:
+			address.street_type = request.form['street_type']
+		if 'city_name' in request.form:
+			address.city_name = request.form['city_name']
+		if 'zipcode' in request.form:
+			address.zipcode = request.form['zipcode']
+		if 'district' in request.form:
+			address.district = request.form['district']
+		try:
+			db.session.commit();
+			res['msg'] = "success";
+			return res;
+		except:
+			db.session.rollback();
+			return res;	
+def delete_patient(request):
+	res = {'msg':'something has gone wrong'}
+	if 'user_id' not in request.form:
+		res['msg'] = "Could not delete patient, missing user_id in form";
+		return res;
+	auth = request.authorization
+	user = Patient.query.filter(Patient.id == request.form['user_id'])
+	print type(user)
+	if user.first() is None:
+		res['msg'] = 'invalid user id'
+		return res;
+	if user.first().manager_id != int(auth.username):
+		res['msg'] = 'invalid manager id'
+		return res;	
+	try:
+		user.delete();
+		db.session.commit();
+		res['msg'] = 'success'
+		return res;
+	except:
+		res['msg'] = "delete failed"
+		return res;	
+		
