@@ -2,6 +2,7 @@ from application.models import *
 from flask import Flask, request, redirect, jsonify, g
 
 def add_appt(request):
+	res = {'msg':'Sorry something went wrong'}
 	if 'user_id' in request.form and 'date' in request.form and 'appt_type' in request.form:
 		#error check that manager making appt is the patient's manager
 		patient = Patient.query.filter(Patient.id == request.form['user_id']).first();
@@ -13,6 +14,10 @@ def add_appt(request):
 		try:
 			import datetime
 			timestamp = datetime.datetime.fromtimestamp(int(request.form['date']));
+			exists = Appointment.query.filter(Appointment.user_id == request.form['user_id']).filter(Appointment.date == timestamp);
+			if exists.first() is not None:
+				res['msg'] = "Appt for this patient already exists at this date";
+				return res;
 			new_appt = Appointment(request.form['user_id'], timestamp, request.form['appt_type']);
 			db.session.add(new_appt);
 			db.session.commit();
@@ -206,6 +211,55 @@ def edit_patient_address(request):
 		except:
 			db.session.rollback();
 			return res;	
+
+def edit_appt(request):
+	res = {'msg':'something has gone wrong'};
+	if 'user_id' not in request.form or 'old_date' not in request.form:
+		res['msg'] = "Could not edit appt, missing user_id or date in form";
+		return res;
+	else:
+		import datetime
+		timestamp = datetime.datetime.fromtimestamp(int(request.form['old_date']));
+		appt = Appointment.query.filter(Appointment.user_id == request.form['user_id']).filter(Appointment.date == timestamp).first()
+		if appt is None:
+			res['msg'] = "Either user id or date is wrong"
+			return res;
+		if 'new_date' in request.form:
+			new_timestamp = datetime.datetime.fromtimestamp(int(request.form['new_date']));
+			appt.date = new_timestamp 
+		if 'appt_type' in request.form:
+			appt.appt_type = request.form['appt_type']
+		try:
+			db.session.commit();
+			res['msg'] = "success";
+			return res;
+		except ValueError, e:
+			res['msg'] = str(e)
+			db.session.rollback();
+			return res;
+
+def delete_appt(request):
+	res = {'msg':'something has gone wrong'};
+	if 'user_id' not in request.form or 'date' not in request.form:
+		res['msg'] = "Could not delete appt, missing user_id or date in form";
+		return res;
+	else:
+		print "making progress"
+		import datetime
+		timestamp = datetime.datetime.fromtimestamp(int(request.form['date']));
+		appt = Appointment.query.filter(Appointment.user_id == request.form['user_id']).filter(Appointment.date == timestamp)
+		if appt.first() is None:
+			res['msg'] = "Either user_id or date is wrong"
+			return res;
+		try:
+			appt.delete();
+			db.session.commit();
+			res['msg'] = 'success';
+			return res;
+		except ValueError, e:
+			res['msg'] = str(e) 
+			return res;	
+
 def delete_patient(request):
 	res = {'msg':'something has gone wrong'}
 	if 'user_id' not in request.form:
@@ -213,7 +267,6 @@ def delete_patient(request):
 		return res;
 	auth = request.authorization
 	user = Patient.query.filter(Patient.id == request.form['user_id'])
-	print type(user)
 	if user.first() is None:
 		res['msg'] = 'invalid user id'
 		return res;

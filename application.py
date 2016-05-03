@@ -109,6 +109,25 @@ def edit_patient():
 	else:
 		return jsonify(status="500", value = str(res['msg']))
 
+@app.route('/api/edit_appt', methods = ['GET', 'POST'])
+@auth.login_required
+def edit_appt():
+	res = speranza_api.edit_appt(request);
+	if res['msg'] == 'success':
+		return jsonify(status='200', value = str(res['msg']))
+	else:
+		return jsonify(status = '500', value = str(res['msg']))
+@app.route('/api/delete_appt', methods = ['GET', 'POST'])
+@auth.login_required
+def delete_appt():
+	print "delete hit"
+	res = {'msg':'wtf'}
+	res = speranza_api.delete_appt(request);
+	if res['msg'] == 'success':
+		return jsonify(status='200', value = str(res['msg']))
+	else:
+		return jsonify(status='500', value = str(res['msg']))
+
 @app.route('/api/delete_patient', methods = ['GET', 'POST'])
 @auth.login_required
 def delete_patient():
