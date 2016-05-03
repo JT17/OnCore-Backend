@@ -1,9 +1,31 @@
 from application.models import *
 from flask import Flask, request, redirect, jsonify, g
+from dateutil import parser
+import requests
+
+# Download the twilio-python library from http://twilio.com/docs/libraries
+ 
+# Find these values at https://twilio.com/user/account
+# account_sid = "AC67374f743c7b1e1625827c13822f5f2b"
+# auth_token = "b1a10dd37717ed58a50664a27e9a71c5"
+# client = TwilioRestClient(account_sid, auth_token)
+
+ADD_PATIENT_MESSAGE = "jointestgroup"
+FRONTLINESMS_API_KEY = "309fefe6-e619-4766-a4a2-53f0891fde23"
+FRONTLINESMS_WEBHOOK = "https://cloud.frontlinesms.com/api/1/webhook"
 
 def add_appt(request):
+<<<<<<< HEAD
 	res = {'msg':'Sorry something went wrong'}
 	if 'user_id' in request.form and 'date' in request.form and 'appt_type' in request.form:
+=======
+	if 'user_id' in request.form and 'date' in request.form:
+		import datetime
+
+		timestamp = parser.parse(str(request.form['date']))
+		new_appt = Appointment(request.form['user_id'], timestamp);
+
+>>>>>>> b1b7dfaaed890576698ad77cd8a486e437a555fc
 		#error check that manager making appt is the patient's manager
 		patient = Patient.query.filter(Patient.id == request.form['user_id']).first();
 		if patient is None:
@@ -61,6 +83,20 @@ def add_address(request):
 		# db.session.flush();
 		raise ValueError("Could not create address for user something went wrong :(");
 	return user_addr;
+
+'''
+You can now access the endpoint https://cloud.frontlinesms.com/api/1/webhook
+
+This endpoint accepts POST Requests with JSON payloads
+
+The JSON payload should be in the following format:
+
+{"apiKey":"Your API Key", "payload":{"message":"Send a message from a remote app", 
+"recipients":[{ "type":"groupName", "value":"friends" }, { "type":"smartgroupName", "value":"humans" }, 
+{ "type":"contactName", "value":"bobby" }, { "type":"mobile", "value":"+1234567890" }, { "type":"mobile", "value":"+1234567891" }]}}
+
+API_KEY = "309fefe6-e619-4766-a4a2-53f0891fde23"
+'''
 	
 def add_patient(request):
 	try:
@@ -73,18 +109,30 @@ def add_patient(request):
 		if manager == None:
 			return str("Sorry incorrect manager id, please resend form")
 		else:
-			patient = Patient(request.form['firstname'], request.form['lastname'], request.form['phone_number'],
-					request.form['contact_number'], patient_addr.id, int(auth.username));
 			try:
+				patient = Patient(request.form['firstname'], request.form['lastname'], request.form['phone_number'], 
+					request.form['contact_number'], patient_addr.id, auth.username);
+				
+				# message = client.messages.create(to=request.form['phone_number'], from_=request.form['phone_number'],body=add_patient_message)
+				message = "Thanks for joining Speranza Health"
+
+				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
+					"payload":{"message": message, "recipients":[{"type": "mobile", "value": request.form['phone_number']}]}});
+
 				db.session.add(patient);
 				db.session.commit();
 			except:
 				db.session.flush();
 				raise ValueError("Could not create patient, something went wrong sorry");
+<<<<<<< HEAD
 	else:
 		return str("Need a manager");
 	return str("success")
-
+=======
+			else:
+				return str("Need a manager");
+	return str("Successfully added patient");
+>>>>>>> b1b7dfaaed890576698ad77cd8a486e437a555fc
 
 def add_manager(request):
 	try:
@@ -111,6 +159,7 @@ def add_manager(request):
 def get_managers(request):
 	managers = Manager.query.all();
 	return managers;
+
 def get_patients(request):
 	pts = Patient.query.all();
 	return pts;

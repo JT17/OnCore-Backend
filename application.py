@@ -61,15 +61,16 @@ def add_manager():
 	return speranza_api.add_manager(request);
 
 #this is a testing function but should not be exposed to any actual users
-@application.route('api/get_managers', methods=['GET', 'POST'])
-def get_managers():
-	mgrs = speranza_api.get_managers(request);
-	for val in mgrs:
-		print val.id
-		print val.password
-	return redirect('/');
+# @application.route('api/get_managers', methods=['GET', 'POST'])
+# def get_managers():
+# 	mgrs = speranza_api.get_managers(request);
+# 	for val in mgrs:
+# 		print val.id
+# 		print val.password
+# 	return redirect('/');
+
 #also a testing function
-# @app.route('/get_patients', methods=['GET', 'POST'])
+# @application.route('/get_patients', methods=['GET', 'POST'])
 # def get_patients():
 #	pts = speranza_api.get_patients(request);
 #	for val in pts:
@@ -77,6 +78,7 @@ def get_managers():
 #		print val.id
 #		print val.manager_id
 #	return redirect('/');
+
 @application.route('/api/get_user_appts', methods=['GET', 'POST'])
 @auth.login_required
 def get_user_appts():
@@ -104,6 +106,7 @@ def edit_appt():
 		return jsonify(status='200', value = str(res['msg']))
 	else:
 		return jsonify(status = '500', value = str(res['msg']))
+        
 @application.route('/api/delete_appt', methods = ['GET', 'POST'])
 @auth.login_required
 def delete_appt():
