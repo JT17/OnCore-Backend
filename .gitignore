@@ -4,5 +4,5 @@ application/*.pyc
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
-*.pycY
+*.pyc
 
