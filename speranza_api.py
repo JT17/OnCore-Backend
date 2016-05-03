@@ -15,17 +15,13 @@ FRONTLINESMS_API_KEY = "309fefe6-e619-4766-a4a2-53f0891fde23"
 FRONTLINESMS_WEBHOOK = "https://cloud.frontlinesms.com/api/1/webhook"
 
 def add_appt(request):
-<<<<<<< HEAD
 	res = {'msg':'Sorry something went wrong'}
 	if 'user_id' in request.form and 'date' in request.form and 'appt_type' in request.form:
-=======
-	if 'user_id' in request.form and 'date' in request.form:
 		import datetime
 
 		timestamp = parser.parse(str(request.form['date']))
 		new_appt = Appointment(request.form['user_id'], timestamp);
 
->>>>>>> b1b7dfaaed890576698ad77cd8a486e437a555fc
 		#error check that manager making appt is the patient's manager
 		patient = Patient.query.filter(Patient.id == request.form['user_id']).first();
 		if patient is None:
@@ -124,15 +120,9 @@ def add_patient(request):
 			except:
 				db.session.flush();
 				raise ValueError("Could not create patient, something went wrong sorry");
-<<<<<<< HEAD
 	else:
 		return str("Need a manager");
 	return str("success")
-=======
-			else:
-				return str("Need a manager");
-	return str("Successfully added patient");
->>>>>>> b1b7dfaaed890576698ad77cd8a486e437a555fc
 
 def add_manager(request):
 	try:
