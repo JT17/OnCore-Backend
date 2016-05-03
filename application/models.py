@@ -9,19 +9,21 @@ class Appointment(db.Model):
 	__tablename__ = 'appointments'
 	id = Column(Integer, primary_key=True)
 	user_id = Column(Integer,ForeignKey('patients.id'))
-	# user_id = Column(String(80), nullable=False)
 	date = Column(DateTime, nullable=False)
+	appt_type = Column(String(250), nullable=False);
 
-	def __init__(self, user_id, date):
+	def __init__(self, user_id, date, appt_type):
 		self.user_id = user_id 
 		self.date = date 
+		self.appt_type = appt_type
 
 	def serialize(self):
 		"""Return object data in easily serializable format"""
 		return{
 			'id':self.id,
 			'user_id':self.user_id,
-			'date':self.date
+			'date':self.date,
+			'appt_type':self.appt_type
 		}
 	def __repr__(self):
 		return '<User %r>' % self.user_id

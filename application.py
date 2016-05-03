@@ -29,11 +29,11 @@ auth = HTTPBasicAuth()
 def verify_password(username_or_token, pwd):
 	return speranza_api.verify_password(username_or_token, pwd);
 
-@app.route('/api/token')
+@app.route('/api/token', methods=['GET','POST'])
 @auth.login_required
 def get_auth_token():
 	token = g.manager.generate_auth_token()
-	return jsonify({'token':token.decode('ascii')})
+	return jsonify({'status':'200', 'token':token.decode('ascii')})
 
 @app.route('/hello_monkey', methods=['GET', 'POST'])
 @auth.login_required
@@ -42,27 +42,35 @@ def hello_monkey():
     resp.message("Hello, Mobile Monkey");
     return str(resp)
 
-@app.route('/add_appt', methods=['GET', 'POST'])
+@app.route('/api/add_appt', methods=['GET', 'POST'])
 @auth.login_required
 def add_appt():
-    print "add_appt"
-    return speranza_api.add_appt(request);
+	res = speranza_api.add_appt(request);
+	if (res == "success"):
+		return jsonify(status="200", value=str(res))	
+	else:
+		return jsonify(status="500", value=str(res))
 
-
-@app.route('/add_patient', methods=['GET', 'POST'])
+@app.route('/api/add_patient', methods=['GET', 'POST'])
 @auth.login_required
 def add_patient():
-    speranza_api.add_patient(request);
-    return redirect('/');
+	res = speranza_api.add_patient(request);
+    	if (res == "success"):
+		return jsonify(status="200",value=str(res))
+	else:
+		return jsonify(status="500", value=str(res))
 
 
-@app.route('/add_manager', methods=['GET', 'POST'])
+@app.route('/api/add_manager', methods=['GET', 'POST'])
 def add_manager():
-	print request.form
-	return speranza_api.add_manager(request);
+	res = speranza_api.add_manager(request);
+	if (res['msg'] == "success"):
+		return jsonify(status="200", value = (res['msg']), manager_id = (res['mgr_id']))
+	else:
+		return jsonify(status="500", value = str(res))
 
 #this is a testing function but should not be exposed to any actual users
-#@app.route('/get_managers', methods=['GET', 'POST'])
+#@app.route('/api/get_managers', methods=['GET', 'POST'])
 def get_managers():
 	mgrs = speranza_api.get_managers(request);
 	for val in mgrs:
@@ -70,19 +78,64 @@ def get_managers():
 		print val.password
 	return redirect('/');
 #also a testing function
-@app.route('/get_patients', methods=['GET', 'POST'])
+@app.route('/api/get_patients', methods=['GET', 'POST'])
 def get_patients():
 	pts = speranza_api.get_patients(request);
 	for val in pts:
 		print val.firstname
 		print val.id
-		print val.manager_id
+		print val.phone_number
+		print val.contact_number
+		addr = Address.query.filter(Address.id == val.address_id).first();
+		print addr.street_name;
+		print addr.street_num;
 	return redirect('/');
-@app.route('/get_user_appts', methods=['GET', 'POST'])
+@app.route('/api/get_user_appts', methods=['GET', 'POST'])
 @auth.login_required
 def get_user_appts():
-    return speranza_api.get_user_appts(request);
+	res = speranza_api.get_user_appts(request);
+	if type(res) is str:
+		return jsonify(status="500",value = str(res))
+	else:
+		print type(res)
+		return jsonify(status="200", value = [i.serialize() for i in res]);
 
+@app.route('/api/edit_patient', methods=['GET', 'POST'])
+@auth.login_required
+def edit_patient():
+	res = speranza_api.edit_patient(request);
+	if res['msg'] == 'success':
+		return jsonify(status="200", value = str(res['msg']))
+	else:
+		return jsonify(status="500", value = str(res['msg']))
+
+@app.route('/api/edit_appt', methods = ['GET', 'POST'])
+@auth.login_required
+def edit_appt():
+	res = speranza_api.edit_appt(request);
+	if res['msg'] == 'success':
+		return jsonify(status='200', value = str(res['msg']))
+	else:
+		return jsonify(status = '500', value = str(res['msg']))
+@app.route('/api/delete_appt', methods = ['GET', 'POST'])
+@auth.login_required
+def delete_appt():
+	print "delete hit"
+	res = {'msg':'wtf'}
+	res = speranza_api.delete_appt(request);
+	if res['msg'] == 'success':
+		return jsonify(status='200', value = str(res['msg']))
+	else:
+		return jsonify(status='500', value = str(res['msg']))
+
+@app.route('/api/delete_patient', methods = ['GET', 'POST'])
+@auth.login_required
+def delete_patient():
+	res = speranza_api.delete_patient(request);
+	if res['msg'] == 'success':
+		return jsonify(status='200', value = str(res['msg']))
+	else:
+		return jsonify(status='500', value = str(res['msg']))
 @app.route("/", methods=['GET', 'POST'])
 def index():
     # form1 = EnterAppointmentInfo(request.form) 
