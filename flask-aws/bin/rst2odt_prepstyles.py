@@ -1,4 +1,4 @@
-#!/Users/alexmarkovits/Dropbox/OnCore/flask-demo/flask-aws/bin/python
+#!/Users/alexmarkovits/Dropbox/Speranza/Speranza-Backend/flask-aws/bin/python
 
 # $Id: rst2odt_prepstyles.py 5839 2009-01-07 19:09:28Z dkuhlman $
 # Author: Dave Kuhlman <dkuhlman@rexx.com>
