@@ -106,7 +106,7 @@ def edit_appt():
 		return jsonify(status='200', value = str(res['msg']))
 	else:
 		return jsonify(status = '500', value = str(res['msg']))
-        
+
 @application.route('/api/delete_appt', methods = ['GET', 'POST'])
 @auth.login_required
 def delete_appt():
@@ -169,4 +169,7 @@ def index():
     return render_template('index.html', appts=appts, patients=patients)
 
 if __name__ == '__main__':
+    import os
+    os.remove('application/test.db')
+    db.create_all()
     application.run(host='0.0.0.0')
