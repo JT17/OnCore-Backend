@@ -157,19 +157,19 @@ def index():
     
     #return render_template('index.html', appointmentForm=form1)
     # try:   
-    appts = Appointment.query.order_by(Appointment.id.desc())
-    patients = Patient.query.order_by(Patient.id.desc())
+    # appts = Appointment.query.order_by(Appointment.id.desc())
+    # patients = Patient.query.order_by(Patient.id.desc())
     # print appts[0]
     #db.session.close()
     #except:
     #    db.session.rollback()
     #if len(appts) > 0:
     #   print appts[0]
-    db.session.rollback()
-    return render_template('index.html', appts=appts, patients=patients)
+    # db.session.rollback()
+    return render_template('index.html', appts=[], patients=[])
 
 if __name__ == '__main__':
-    import os
-    os.remove('application/test.db')
-    db.create_all()
+    # import os
+    # os.remove('application/test.db')
+    # db.create_all()
     application.run(host='0.0.0.0')
