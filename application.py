@@ -42,6 +42,7 @@ def hello_monkey():
     resp.message("Hello, Mobile Monkey");
     return str(resp)
 
+#requires user_id, date, appt_type in request form
 @application.route('/api/add_appt', methods=['GET', 'POST'])
 @auth.login_required
 def add_appt():
@@ -51,6 +52,29 @@ def add_appt():
 	else:
 		return jsonify(status="500", value=res['msg'])
 
+#requires user_id, date
+@application.route('/api/checkin', methods = ['GET', 'POST'])
+@auth.login_required
+def checkin_appt():
+	res = speranza_api.checkin_out(request);
+	if res['msg'] == 'success':
+		return jsonify(status='200', value = res['msg'])
+	else:
+		return jsonify(status='500', value=res['msg'])
+
+#requires user_id, date
+@application.route('/api/checkout', methods = ['GET', 'POST'])
+@auth.login_required
+def checkout_appt():
+	res = speranza_api.checkin_out(request, checkin=False);
+	if res['msg'] == 'success':
+		return jsonify(status = '200', value = res['msg'])
+	else:
+		return jsonify(status = '500', value = res['msg'])
+
+
+#requires firstname, lastname, phone_number, contact_number, street_num, street_name
+#street_type, city_name, zipcode, district (can do without address info tho)
 @application.route('/api/add_patient', methods=['GET', 'POST'])
 @auth.login_required
 def add_patient():
@@ -60,10 +84,15 @@ def add_patient():
 	else:
 		return jsonify(status="500", value=res['msg'])
 
+#requires firstname, lastname, phone_number, contact_number, password
+#street_num, street_name, street_type, city_name, zipcode, district
 @application.route('/api/add_manager', methods=['GET', 'POST'])
 def add_manager():
-	print request.form
-	return speranza_api.add_manager(request);
+	res = speranza_api.add_manager(request)
+	if res['msg'] == 'success':
+		return jsonify(status = '200', value = res['msg'], manager_id = res['mgr_id'])
+	else:
+		return jsonify(status = '500', value = res['msg'])
 
 #this is a testing function but should not be exposed to any actual users
 # @application.route('api/get_managers', methods=['GET', 'POST'])
@@ -83,7 +112,18 @@ def add_manager():
 #		print val.id
 #		print val.manager_id
 #	return redirect('/');
+#another testing function
+#@application.route('/get_appts', methods=['GET','POST'])
+#def get_appts():
+#	appts = speranza_api.get_appts(request);
+#	for val in appts:
+#		print val.user_id
+#		print val.date
+#		print val.appt_type
+#		print val.checkin
+#	return redirect('/')
 
+#requires just the authorization
 @application.route('/api/get_user_appts', methods=['GET', 'POST'])
 @auth.login_required
 def get_user_appts():
@@ -94,6 +134,8 @@ def get_user_appts():
 		print type(res)
 		return jsonify(status="200", value = [i.serialize() for i in res]);
 
+#requires user_id and then any user fields you want to change including address
+#can't change user's names however
 @application.route('/api/edit_patient', methods=['GET', 'POST'])
 @auth.login_required
 def edit_patient():
@@ -103,6 +145,9 @@ def edit_patient():
 	else:
 		return jsonify(status="500", value = str(res['msg']))
 
+#requires user_id, old_date (date of first appt) and then new_date || appt_type
+#so can change either new_date and or appt_type
+#if you have neither it'll work but nothing happens
 @application.route('/api/edit_appt', methods = ['GET', 'POST'])
 @auth.login_required
 def edit_appt():
@@ -112,6 +157,7 @@ def edit_appt():
 	else:
 		return jsonify(status = '500', value = str(res['msg']))
 
+#requires user_id and date
 @application.route('/api/delete_appt', methods = ['GET', 'POST'])
 @auth.login_required
 def delete_appt():
@@ -123,6 +169,7 @@ def delete_appt():
 	else:
 		return jsonify(status='500', value = str(res['msg']))
 
+#requires user_id
 @application.route('/api/delete_patient', methods = ['GET', 'POST'])
 @auth.login_required
 def delete_patient():

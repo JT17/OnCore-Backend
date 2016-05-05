@@ -64,7 +64,7 @@ def send_hemeonc_reminders():
 			elif line.rstrip('\n') == 'END_TREATMENT':
 				print "inside end_treatment"
 				print treatment
-				appts = Appointment.query.filter(Appointment.appt_type == treatment);
+				appts = Appointment.query.filter(Appointment.appt_type == treatment).filter(Appointment.checkin == True);
 				import datetime
 				today = datetime.datetime.now().date();
 				for appt in appts:

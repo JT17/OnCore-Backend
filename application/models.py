@@ -1,7 +1,7 @@
 from flask import Flask
 from passlib.apps import custom_app_context as pwd_context
 from flask.ext.sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Boolean
 from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
 from __init__ import db, application as app
 
@@ -11,12 +11,14 @@ class Appointment(db.Model):
 	user_id = Column(Integer,ForeignKey('patients.id'))
 	date = Column(DateTime, nullable=False)
 	appt_type = Column(String(250), nullable=False);
-
+	checkin = Column(Boolean, nullable = False);
+	checkout = Column(Boolean, nullable = False);
 	def __init__(self, user_id, date, appt_type):
 		self.user_id = user_id 
 		self.date = date 
 		self.appt_type = appt_type
-
+		self.checkin = False;
+		self.checkout = False;
 	def serialize(self):
 		"""Return object data in easily serializable format"""
 		return{
