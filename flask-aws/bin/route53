@@ -1,4 +1,4 @@
-#!/Users/alexmarkovits/Dropbox/OnCore/flask-demo/flask-aws/bin/python
+#!/Users/alexmarkovits/Dropbox/Speranza/Speranza-Backend/flask-aws/bin/python
 # Author: Chris Moyer
 #
 # route53 is similar to sdbadmin for Route53, it's a simple
