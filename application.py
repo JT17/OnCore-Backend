@@ -46,19 +46,19 @@ def hello_monkey():
 @auth.login_required
 def add_appt():
 	res = speranza_api.add_appt(request);
-	if (res == "success"):
-		return jsonify(status="200", value=str(res))	
+	if (res['msg'] == "success"):
+		return jsonify(status="200", value=res['msg'])	
 	else:
-		return jsonify(status="500", value=str(res))
+		return jsonify(status="500", value=res['msg'])
 
 @app.route('/api/add_patient', methods=['GET', 'POST'])
 @auth.login_required
 def add_patient():
 	res = speranza_api.add_patient(request);
-    	if (res == "success"):
-		return jsonify(status="200",value=str(res))
+    	if (res['msg'] == "success"):
+		return jsonify(status="200",value=res['msg'], patient_id = res['patient_id'])
 	else:
-		return jsonify(status="500", value=str(res))
+		return jsonify(status="500", value=res['msg'])
 
 
 @app.route('/api/add_manager', methods=['GET', 'POST'])

@@ -15,27 +15,22 @@ FRONTLINESMS_API_KEY = "309fefe6-e619-4766-a4a2-53f0891fde23"
 FRONTLINESMS_WEBHOOK = "https://cloud.frontlinesms.com/api/1/webhook"
 
 def add_appt(request):
-<<<<<<< HEAD
 	res = {'msg':'Sorry something went wrong'}
 	if 'user_id' in request.form and 'date' in request.form and 'appt_type' in request.form:
-=======
-	if 'user_id' in request.form and 'date' in request.form:
-		import datetime
-
-		timestamp = parser.parse(str(request.form['date']))
-		new_appt = Appointment(request.form['user_id'], timestamp);
-
->>>>>>> b1b7dfaaed890576698ad77cd8a486e437a555fc
 		#error check that manager making appt is the patient's manager
 		patient = Patient.query.filter(Patient.id == request.form['user_id']).first();
 		if patient is None:
-			return str("Bad patient id")
+			res['msg'] = 'Bad patient id'
+			return res 
 		auth = request.authorization
 		if patient.manager_id != int(auth.username):
-			return str("Wrong manager");
+			res['msg'] = 'Wrong manager'
+			return res; 
 		try:
 			import datetime
-			timestamp = datetime.datetime.fromtimestamp(int(request.form['date']));
+			print float(request.form['date'])
+			timestamp = datetime.datetime.utcfromtimestamp(float(request.form['date']));
+			print timestamp
 			exists = Appointment.query.filter(Appointment.user_id == request.form['user_id']).filter(Appointment.date == timestamp);
 			if exists.first() is not None:
 				res['msg'] = "Appt for this patient already exists at this date";
@@ -43,16 +38,16 @@ def add_appt(request):
 			new_appt = Appointment(request.form['user_id'], timestamp, request.form['appt_type']);
 			db.session.add(new_appt);
 			db.session.commit();
+			res['msg'] = 'success'
 		except Exception, e:
-			print str(e);
 			db.session.rollback()
+			res['msg'] = str(e)
 			#db.session.flush();
-			print "wrong"
-			return str("Could not create new appt :( something went wrong");
-		return str("success");
+			return res;
+		return res;
 	else:
-		return str("Could not create new appt :( missing post values");
-
+		res['msg'] = "Could not create new appt missing post values"
+		return res;
 
 	
 def add_address(request):
@@ -99,10 +94,12 @@ API_KEY = "309fefe6-e619-4766-a4a2-53f0891fde23"
 '''
 	
 def add_patient(request):
+	res = {'msg':'something went wrong sorry'}
 	try:
 		patient_addr = add_address(request);
 	except ValueError as err:
-		return err.args
+		res['msg'] = str(err.args)
+		return res 
 	auth = request.authorization
 	if auth.username:
 		manager = Manager.query.filter(Manager.id == int(auth.username))
@@ -118,21 +115,17 @@ def add_patient(request):
 
 				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
 					"payload":{"message": message, "recipients":[{"type": "mobile", "value": request.form['phone_number']}]}});
-
+				print request.form['phone_number']
 				db.session.add(patient);
 				db.session.commit();
+				res['msg'] = 'success'
+				res['patient_id'] = patient.id
+				print res
+				return res;
 			except:
 				db.session.flush();
-				raise ValueError("Could not create patient, something went wrong sorry");
-<<<<<<< HEAD
-	else:
-		return str("Need a manager");
-	return str("success")
-=======
-			else:
-				return str("Need a manager");
-	return str("Successfully added patient");
->>>>>>> b1b7dfaaed890576698ad77cd8a486e437a555fc
+				res['msg'] = 'something went wrong trying to create patient';
+				return res;
 
 def add_manager(request):
 	try:
