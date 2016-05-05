@@ -221,13 +221,23 @@ def verify_password(username, password_or_token):
 def get_user_appts(request):
 	import json
 	try:
+		res = {'msg':'Sorry something went wrong'}
 		auth = request.authorization
-		appts = Appointment.query.filter(Appointment.user_id == request.form['user_id'])
-		all_appts = Appointment.query.order_by(Appointment.date).all()
-
-		return all_appts 
+		import datetime
+		timestamp = datetime.date.today()
+		tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+		patients = Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id);
+		appts = []
+		for val in patients:
+			appt = Appointment.query.filter(Appointment.user_id == val.id).filter(Appointment.date >= timestamp).filter(Appointment.date < tomorrow)
+			if(appt.first() is not None):
+				appts.append(appt.first())
+		res['msg'] = 'success'
+		res['appts'] = appts
+		return res;
 	except ValueError:
-		return str("Couldn't fetch your appointments something went wrong :(");
+		res['msg'] = "Could not fetch appts something went wrong";
+		return res;
 
 def edit_patient(request):
 	res = {'msg':"something has gone wrong"};
@@ -305,14 +315,14 @@ def edit_appt(request):
 		return res;
 	else:
 		import datetime
-		timestamp = datetime.datetime.fromtimestamp(int(request.form['old_date']));
+		timestamp = datetime.datetime.utcfromtimestamp(int(request.form['old_date']));
 		appt = Appointment.query.filter(Appointment.user_id == request.form['user_id']).filter(Appointment.date == timestamp).first()
 		if appt is None:
 			res['msg'] = "Either user id or date is wrong"
 			return res;
 		changed = False;
 		if 'new_date' in request.form:
-			new_timestamp = datetime.datetime.fromtimestamp(int(request.form['new_date']));
+			new_timestamp = datetime.datetime.utcfromtimestamp(int(request.form['new_date']));
 			appt.date = new_timestamp 
 			changed = True;
 		if 'appt_type' in request.form:
@@ -335,7 +345,7 @@ def delete_appt(request):
 		return res;
 	else:
 		import datetime
-		timestamp = datetime.datetime.fromtimestamp(int(request.form['date']));
+		timestamp = datetime.datetime.utcfromtimestamp(int(request.form['date']));
 		appt = Appointment.query.filter(Appointment.user_id == request.form['user_id']).filter(Appointment.date == timestamp)
 		if appt.first() is None:
 			res['msg'] = "Either user_id or date is wrong"
