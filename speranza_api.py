@@ -111,8 +111,9 @@ def add_address(request):
 	try:
 		db.session.add(user_addr);
 		db.session.flush();
-	except:
+	except Exception, e:
 		db.session.rollback()
+		print str(e);
 		# db.session.flush();
 		raise ValueError("Could not create address for user something went wrong :(");
 	return user_addr;
