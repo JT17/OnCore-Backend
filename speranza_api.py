@@ -115,7 +115,7 @@ def add_address(request):
 		db.session.rollback()
 		print str(e);
 		# db.session.flush();
-		raise ValueError("Could not create address for user something went wrong :(");
+		raise ValueError(str(e));
 	return user_addr;
 
 '''
@@ -153,11 +153,11 @@ def add_patient(request):
 				patient = Patient(request.form['firstname'], request.form['lastname'], request.form['phone_number'], 
 					request.form['contact_number'], patient_addr.id, auth.username);
 				
-				# message = client.messages.create(to=request.form['phone_number'], from_=request.form['phone_number'],body=add_patient_message)
+#	message = client.messages.create(to=request.form['phone_number'], from_=request.form['phone_number'],body=add_patient_message)
 				message = "Thanks for joining Speranza Health"
 
-#				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
-#					"payload":{"message": message, "recipients":[{"type": "mobile", "value": request.form['phone_number']}]}});
+				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
+					"payload":{"message": message, "recipients":[{"type": "mobile", "value": request.form['phone_number']}]}});
 				print request.form['phone_number']
 				db.session.add(patient);
 				db.session.commit();
@@ -165,9 +165,9 @@ def add_patient(request):
 				res['patient_id'] = patient.id
 				print res
 				return res;
-			except:
+			except Exception, e:
 				db.session.flush();
-				res['msg'] = 'something went wrong trying to create patient';
+				res['msg'] = str(e) 
 				return res;
 
 def add_manager(request):
