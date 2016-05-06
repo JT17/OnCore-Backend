@@ -5,4 +5,4 @@ application/*.pyc
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 *.pyc
-
+application/test.db
