@@ -113,26 +113,25 @@ def add_manager():
 #		print val.manager_id
 #	return redirect('/');
 #another testing function
-#@application.route('/get_appts', methods=['GET','POST'])
-#def get_appts():
-#	appts = speranza_api.get_appts(request);
-#	for val in appts:
-#		print val.user_id
-#		print val.date
-#		print val.appt_type
-#		print val.checkin
-#	return redirect('/')
+@application.route('/get_appts', methods=['GET','POST'])
+def get_appts():
+	appts = speranza_api.get_appts(request);
+	for val in appts:
+		print val.user_id
+		print val.date
+		print val.appt_type
+		print val.checkin
+	return redirect('/')
 
 #requires just the authorization
 @application.route('/api/get_user_appts', methods=['GET', 'POST'])
 @auth.login_required
 def get_user_appts():
 	res = speranza_api.get_user_appts(request);
-	if type(res) is str:
-		return jsonify(status="500",value = str(res))
+	if res['msg'] == 'success':
+		return jsonify(status= '200', value = str(res['msg']), appts = [i.serialize() for i in res['appts']])
 	else:
-		print type(res)
-		return jsonify(status="200", value = [i.serialize() for i in res]);
+		return jsonify(status="500", value = res['msg']);
 
 #requires user_id and then any user fields you want to change including address
 #can't change user's names however

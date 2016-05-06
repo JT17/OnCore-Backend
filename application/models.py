@@ -25,7 +25,9 @@ class Appointment(db.Model):
 			'id':self.id,
 			'user_id':self.user_id,
 			'date':self.date,
-			'appt_type':self.appt_type
+			'appt_type':self.appt_type,
+			'checkin':self.checkin,
+			'checkout':self.checkout
 		}
 	def __repr__(self):
 		return '<User %r>' % self.user_id
