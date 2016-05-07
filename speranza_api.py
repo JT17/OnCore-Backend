@@ -211,7 +211,6 @@ def get_patients(request):
 def get_appts(request):
 	return Appointment.query.all();
 def verify_password(username, password_or_token):
-	return True;
 	mgr = Manager.verify_auth_token(password_or_token)
 	print "mgr after verify_auth_token: "
 	print mgr
