@@ -21,6 +21,7 @@ def add_appt(request):
 		patient = Patient.query.filter(Patient.id == request.form['user_id']).first();
 		if patient is None:
 			res['msg'] = 'Bad patient id'
+			res['bad_id'] = request.form['user_id']
 			return res 
 		auth = request.authorization
 		if patient.manager_id != int(auth.username):

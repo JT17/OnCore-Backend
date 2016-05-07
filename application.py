@@ -104,14 +104,14 @@ def add_manager():
 # 	return redirect('/');
 
 #also a testing function
-# @application.route('/get_patients', methods=['GET', 'POST'])
-# def get_patients():
-#	pts = speranza_api.get_patients(request);
-#	for val in pts:
-#		print val.firstname
-#		print val.id
-#		print val.manager_id
-#	return redirect('/');
+@application.route('/get_patients', methods=['GET', 'POST'])
+def get_patients():
+	pts = speranza_api.get_patients(request);
+	for val in pts:
+		print val.firstname
+		print val.id
+		print val.manager_id
+	return redirect('/');
 #another testing function
 @application.route('/get_appts', methods=['GET','POST'])
 def get_appts():
