@@ -220,6 +220,6 @@ def index():
     return render_template('index.html', appts=[], patients=[])
 
 if __name__ == '__main__':
-    db.drop_all()
-    db.create_all()
+# db.drop_all()
+#    db.create_all()
     application.run(host='0.0.0.0')

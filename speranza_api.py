@@ -154,10 +154,10 @@ def add_patient(request):
 					request.form['contact_number'], patient_addr.id, auth.username);
 				
 #	message = client.messages.create(to=request.form['phone_number'], from_=request.form['phone_number'],body=add_patient_message)
-				message = "Thanks for joining Speranza Health"
+#				message = "Thanks for joining Speranza Health"
 
-				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
-					"payload":{"message": message, "recipients":[{"type": "mobile", "value": request.form['phone_number']}]}});
+#				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
+#					"payload":{"message": message, "recipients":[{"type": "mobile", "value": request.form['phone_number']}]}});
 				print request.form['phone_number']
 				db.session.add(patient);
 				db.session.commit();
@@ -211,9 +211,12 @@ def get_patients(request):
 def get_appts(request):
 	return Appointment.query.all();
 def verify_password(username, password_or_token):
+	return True;
 	mgr = Manager.verify_auth_token(password_or_token)
+	print "mgr after verify_auth_token: "
+	print mgr
 	if not mgr:
-		mgr = Manager.query.filter_by(id = username).first();
+		mgr = Manager.query.filter(Manager.id == username).first();
 		if not mgr or not mgr.verify_password(password_or_token):
 			return False;
 	g.manager= mgr 
