@@ -239,8 +239,9 @@ def get_user_appts(request):
 		res['msg'] = 'success'
 		res['appts'] = appts
 		return res;
-	except ValueError:
-		res['msg'] = "Could not fetch appts something went wrong";
+	except ValueError, e:
+		db.session.rollback();
+		res['msg'] = str(e) 
 		return res;
 
 def edit_patient(request):
