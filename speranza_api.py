@@ -23,15 +23,18 @@ def add_appt(request):
 			res['msg'] = 'Bad patient id'
 			res['bad_id'] = request.form['user_id']
 			return res 
+		if len(request.form['appt_type']) == 0:
+			res['msg'] = 'Bad appt_type'
+			return res;
+
 		auth = request.authorization
 		if patient.manager_id != int(auth.username):
 			res['msg'] = 'Wrong manager'
 			return res; 
 		try:
+			#right now storing everything as a datetime, but we need to be consistent about this
 			import datetime
-			print float(request.form['date'])
 			timestamp = datetime.datetime.utcfromtimestamp(float(request.form['date']));
-			print timestamp
 			exists = Appointment.query.filter(Appointment.user_id == request.form['user_id']).filter(Appointment.date == timestamp);
 			if exists.first() is not None:
 				res['msg'] = "Appt for this patient already exists at this date";
@@ -88,13 +91,22 @@ def checkin_out(request, checkin = True):
 	else:
 		res['msg'] = 'Missing post values';
 		return res;	
-
-def add_address(request):
-	firstname = request.form['firstname'];
+		
+#returns False if invalid request, True otherwise
+def verify_new_user(request):
 	if 'firstname' not in request.form or 'lastname' not in request.form or 'phone_number' not in request.form \
 		or 'contact_number' not in request.form: 
-		return; 
-	
+		return False;
+	if len(request.form['firstname']) == 0 or len(request.form['lastname']) == 0:
+		return False;
+	pn = request.form['phone_number'];
+	cn = request.form['contact_number'];
+	if pn.isdigit() == False or cn.isdigit() == False or (len(pn) == 0) or (len(cn) == 0):
+		return False;
+	return True;
+
+#returns Address if valid, otherwise raises an error
+def add_address(request):
 	user_addr = Address();
 	if request.form.has_key('street_num'):
 		user_addr.street_num = request.form['street_num'];
@@ -114,7 +126,6 @@ def add_address(request):
 		db.session.flush();
 	except Exception, e:
 		db.session.rollback()
-		print str(e);
 		# db.session.flush();
 		raise ValueError(str(e));
 	return user_addr;
@@ -135,6 +146,9 @@ API_KEY = "309fefe6-e619-4766-a4a2-53f0891fde23"
 	
 def add_patient(request):
 	res = {'msg':'something went wrong sorry'}
+	if verify_new_user(request) == False:
+		res['msg'] = 'Invalid form, please try again'
+		return res;
 	try:
 		patient_addr = add_address(request);
 		if patient_addr is None:
@@ -173,6 +187,9 @@ def add_patient(request):
 
 def add_manager(request):
 	res = {'msg':'Something has gone wrong'}
+	if verify_new_user(request) == False:
+		res['msg'] = 'Invalid form, please try again'
+		return res;
 	try:
 		addr = add_address(request);
 		if addr is None:
@@ -196,7 +213,6 @@ def add_manager(request):
 
 		res['msg'] = 'success'
 		res['mgr_id'] = manager.id
-		print "message: " + res['msg']
 		return res
 	else:
 		res['msg'] = 'No password entered'
@@ -209,12 +225,12 @@ def get_managers(request):
 def get_patients(request):
 	pts = Patient.query.all();
 	return pts;
+
 def get_appts(request):
 	return Appointment.query.all();
+
 def verify_password(username, password_or_token):
 	mgr = Manager.verify_auth_token(password_or_token)
-	print "mgr after verify_auth_token: "
-	print mgr
 	if not mgr:
 		mgr = Manager.query.filter(Manager.id == username).first();
 		if not mgr or not mgr.verify_password(password_or_token):
@@ -257,8 +273,14 @@ def edit_patient(request):
 				res['msg'] = "Invalid manager"
 				return res;
 			if 'phone_number' in request.form:
+				if request.form['phone_number'].isdigit() == False or (len(request.form['phone_number']) == 0):
+					res['msg'] = 'Please enter a valid phone number'
+					return res;
 				user.phone_number = request.form['phone_number']
 			if 'contact_number' in request.form:
+				if request.form['contact_number'].isdigit() == False:
+					res['msg'] = 'Please enter a valid contact number'
+					return res;
 				user.contact_number = request.form['contact_number']
 			if 'edit_address' in request.form:
 				addr_res = edit_patient_address(request);
