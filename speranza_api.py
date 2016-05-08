@@ -228,14 +228,11 @@ def get_user_appts(request):
 		res = {'msg':'Sorry something went wrong'}
 		auth = request.authorization
 		import datetime
-		timestamp = datetime.date.today()
+		today = datetime.date.today()
 		tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-		patients = Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id);
-		appts = []
-		for val in patients:
-			appt = Appointment.query.filter(Appointment.user_id == val.id).filter(Appointment.date >= timestamp).filter(Appointment.date < tomorrow)
-			if(appt.first() is not None):
-				appts.append(appt.first())
+		pts = Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id);
+		appts = Appointment.query.filter(Appointment.user_id.in_(Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id))).filter(Appointment.date >= today).filter(Appointment.date < tomorrow).all();
+
 		res['msg'] = 'success'
 		res['appts'] = appts
 		return res;
