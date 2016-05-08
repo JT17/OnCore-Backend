@@ -155,16 +155,16 @@ def add_patient(request):
 					request.form['contact_number'], patient_addr.id, auth.username);
 				
 #	message = client.messages.create(to=request.form['phone_number'], from_=request.form['phone_number'],body=add_patient_message)
-#				message = "Thanks for joining Speranza Health"
+				message = "Thanks for joining Speranza Health"
 
-#				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
-#					"payload":{"message": message, "recipients":[{"type": "mobile", "value": request.form['phone_number']}]}});
-				print request.form['phone_number']
+				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
+					"payload":{"message": message, "recipients":[{"type": "mobile", "value": request.form['phone_number']}]}});
+#				print request.form['phone_number']
 				db.session.add(patient);
 				db.session.commit();
 				res['msg'] = 'success'
 				res['patient_id'] = patient.id
-				print res
+#				print res
 				return res;
 			except Exception, e:
 				db.session.flush();
