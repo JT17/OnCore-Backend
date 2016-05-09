@@ -14,6 +14,8 @@ def send_appointment_reminders_no_authentication():
 	try:
 		all_appts = Appointment.query.all()
 		for appt in all_appts:
+			if appt.checkin or appt.checkout:
+				continue
 			# print appt.user_id
 			# print appt.date
 			# print datetime.datetime.now() # TODO maybe should be utcnow?
