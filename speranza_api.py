@@ -97,12 +97,23 @@ def verify_new_user(request):
 	print request.form
 	if 'firstname' not in request.form or 'lastname' not in request.form or 'phone_number' not in request.form \
 		or 'contact_number' not in request.form: 
+		print "values are missing:"
+		if 'firstname' not in request.form:
+			print "missing firstname"
+		if 'lastname' not in request.form:
+			print "missing lastname"
+		if 'phone_number' not in request.form:
+			print "missing phone_number"
+		if 'contact_number' not in request.form:
+			print "missing contact_number"
 		return False;
 	if len(request.form['firstname']) == 0 or len(request.form['lastname']) == 0:
+		print "names are too short"
 		return False;
 	pn = request.form['phone_number'];
 	cn = request.form['contact_number'];
 	if pn.isdigit() == False or cn.isdigit() == False or (len(pn) == 0) or (len(cn) == 0):
+		print "phone number isn't digit"
 		return False;
 	return True;
 
