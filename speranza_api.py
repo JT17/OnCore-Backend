@@ -97,6 +97,7 @@ def checkin_out(request, checkin = True):
 		return res;	
 
 def get_form_data(request):
+	print request.get_json()
 	if request.get_json() == None:
 		return request.form
 	return request.get_json()
@@ -212,7 +213,10 @@ def add_patient(request):
 				return res;
 
 def add_manager(request):
+
 	res = {'msg':'Something has gone wrong'}
+	form_data = get_form_data(request)
+	
 	if verify_new_user(request) == False:
 		res['msg'] = 'Invalid form, please try again'
 		return res;
