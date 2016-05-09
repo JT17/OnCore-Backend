@@ -14,15 +14,18 @@ def send_appointment_reminders_no_authentication():
 	try:
 		all_appts = Appointment.query.all()
 		for appt in all_appts:
-			print appt.user_id
-			print appt.date
-			print datetime.datetime.now() # TODO maybe should be utcnow?
+			if appt.checkin or appt.checkout:
+				continue
+			# print appt.user_id
+			# print appt.date
+			# print datetime.datetime.now() # TODO maybe should be utcnow?
 			time_until_appointment = appt.date - datetime.datetime.now()
 			print time_until_appointment
-		 	if time_until_appointment <= datetime.timedelta(days=1):
+		 	if time_until_appointment <= datetime.timedelta(days=1) and time_until_appointment > datetime.timedelta(days=0):
 		 		patient = Patient.query.filter(Patient.id == appt.user_id).first()
 		 		message = "Hola {0}, \n no olvide que tiene una cita a las {1}".format(patient.firstname, str(appt.date))
-#	send_message(message, patient.phone_number);
+		 		print "Message: {0} \nNumber: {1} \nDate: {2}".format(message, patient.phone_number, appt.date)
+			#	send_message(message, patient.phone_number);
 	except ValueError:
 		return str("Couldn't fetch your appointments something went wrong :(");
 
@@ -32,7 +35,7 @@ def send_diabetes_reminders():
 		for appt in db_pt_noinsulin:
 			patient = Patient.query.filter(Patient.id == appt.user_id).first()
 			message = "Hi {0}, \n no olvide que necesita comer frutas y vegetables cada dia!".format(patient.firstname)
-			send_message(message, patient.phone_number);
+#			send_message(message, patient.phone_number);
 		db_pt_insulin = Appointment.query.filter(Appointment.appt_type == 'db_insulin');
 		for appt in db_pt_insulin:
 			patient = Patient.query.filter(Patient.id == appt.user_id).first();
@@ -75,9 +78,14 @@ def send_hemeonc_reminders():
 					if int(days_since) in messages:
 						patient = Patient.query.filter(Patient.id == appt.user_id).first();
 						message = messages[int(days_since)];
-						send_message(message, patient.phone_number)
+#						send_message(message, patient.phone_number)
 	except ValueError, e:
 		return str(e);
+
+def create_fake_appointments():
+	pass
+
+create_fake_appointments()
 send_appointment_reminders_no_authentication()
 send_hemeonc_reminders();
 send_diabetes_reminders()
