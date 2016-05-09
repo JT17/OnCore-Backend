@@ -129,7 +129,7 @@ def get_appts():
 def get_user_appts():
 	res = speranza_api.get_user_appts(request);
 	if res['msg'] == 'success':
-		return jsonify(status= '200', value = str(res['msg']), appts = [i.serialize() for i in res['appts']])
+		return jsonify(status= '200', value = str(res['msg']), appts = res['appts'] )
 	else:
 		return jsonify(status="500", value = res['msg']);
 
