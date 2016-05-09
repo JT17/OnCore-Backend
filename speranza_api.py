@@ -94,6 +94,7 @@ def checkin_out(request, checkin = True):
 		
 #returns False if invalid request, True otherwise
 def verify_new_user(request):
+	print request
 	if 'firstname' not in request.form or 'lastname' not in request.form or 'phone_number' not in request.form \
 		or 'contact_number' not in request.form: 
 		return False;
