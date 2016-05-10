@@ -281,7 +281,6 @@ def get_user_appts(request):
 		pts = Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id);
 		appts = Appointment.query.filter(Appointment.user_id.in_(Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id))).filter(Appointment.date >= today).filter(Appointment.date < tomorrow).join(Patient, (Patient.id == Appointment.user_id)).with_entities(Patient.firstname, Patient.lastname, Appointment.date).all()
 		
-		print appts.length()	
 		ser_appts = []	
 		for appt in appts:
 			ser_appt = {'firstname':appt.firstname, 'lastname':appt.lastname, 'date':appt.date}
