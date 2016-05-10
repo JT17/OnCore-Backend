@@ -123,9 +123,9 @@ def verify_new_user(request):
 		return False;
 	pn = form_data['phone_number'];
 	cn = form_data['contact_number'];
-	if pn.isdigit() == False or cn.isdigit() == False or (len(pn) == 0) or (len(cn) == 0):
-		print "phone number isn't digit"
-		return False;
+#	if pn.isdigit() == False or cn.isdigit() == False or (len(pn) == 0) or (len(cn) == 0):
+#		print "phone number isn't digit"
+#		return False;
 	return True;
 
 #returns Address if valid, otherwise raises an error
@@ -196,10 +196,10 @@ def add_patient(request):
 					form_data['contact_number'], patient_addr.id, auth.username);
 				
 #	message = client.messages.create(to=form_data['phone_number'], from_=form_data['phone_number'],body=add_patient_message)
-#				message = "Thanks for joining Speranza Health"
+				message = "Thanks for joining Speranza Health"
 
-#				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
-#					"payload":{"message": message, "recipients":[{"type": "mobile", "value": form_data['phone_number']}]}});
+				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
+					"payload":{"message": message, "recipients":[{"type": "mobile", "value": form_data['phone_number']}]}});
 #				print form_data['phone_number']
 				db.session.add(patient);
 				db.session.commit();
@@ -281,6 +281,7 @@ def get_user_appts(request):
 		pts = Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id);
 		appts = Appointment.query.filter(Appointment.user_id.in_(Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id))).filter(Appointment.date >= today).filter(Appointment.date < tomorrow).join(Patient, (Patient.id == Appointment.user_id)).with_entities(Patient.firstname, Patient.lastname, Appointment.date).all()
 		
+		print appts.length()	
 		ser_appts = []	
 		for appt in appts:
 			ser_appt = {'firstname':appt.firstname, 'lastname':appt.lastname, 'date':appt.date}
