@@ -116,12 +116,11 @@ def get_patients():
 @application.route('/get_appts', methods=['GET','POST'])
 def get_appts():
 	appts = speranza_api.get_appts(request);
+	ser_appts = [] 
 	for val in appts:
-		print val.user_id
-		print val.date
-		print val.appt_type
-		print val.checkin
-	return redirect('/')
+		ser_appt = {'user_id': val.user_id, 'date':val.date, 'appt_type': val.appt_type, 'checkin':val.checkin}
+		ser_appts.append(ser_appt)
+	return jsonify(appts = ser_appts)
 
 #requires just the authorization
 @application.route('/api/get_user_appts', methods=['GET', 'POST'])
