@@ -57,15 +57,15 @@ def send_appointment_reminders_no_authentication():
 
 def send_diabetes_reminders():
 	try:
-		db_pt_noinsulin = Appointment.query.filter(Appointment.appt_type == 'db_noinsulin');
+		db_pt_noinsulin = Appointment.query.filter(Appointment.appt_type == 'no insulina');
 		for appt in db_pt_noinsulin:
 			patient = Patient.query.filter(Patient.id == appt.user_id).first()
-			message = "Hi {0}, \n no olvide que necesita comer frutas y vegetables cada dia!".format(patient.firstname)
+			message = "Hi {0}, \n realice su dieta, no olvide comer fruitas y verduras cada dia".format(patient.firstname)
 #			send_message(message, patient.phone_number);
-		db_pt_insulin = Appointment.query.filter(Appointment.appt_type == 'db_insulin');
+		db_pt_insulin = Appointment.query.filter(Appointment.appt_type == 'insulina');
 		for appt in db_pt_insulin:
 			patient = Patient.query.filter(Patient.id == appt.user_id).first();
-			message = "Hi {0}, \n no ovlide que necesita tomer su insulin hoy!".format(patient.firstname)
+			message = "Hi {0}, \n no olvide que necesita injectarse su insulina hoy, 30 minutos antes de tu desayuno y cena".format(patient.firstname)
 #			send_message(message, patient.phone_number);
 
 	except ValueError, e:
