@@ -176,6 +176,10 @@ def add_patient(request):
 	if verify_new_user(request) == False:
 		res['msg'] = 'Invalid form, please try again'
 		return res;
+	if 'dob' not in form_data:
+		res['msg'] = 'Necesita dob, intenta otra vez'
+	if 'gov_id' not in form_data:
+		res['msg'] = 'Necesita gov_id, intenta otra vez'
 	try:
 		patient_addr = add_address(request);
 		if patient_addr is None:
@@ -193,10 +197,10 @@ def add_patient(request):
 		else:
 			try:
 				patient = Patient(form_data['firstname'], form_data['lastname'], form_data['phone_number'], 
-					form_data['contact_number'], patient_addr.id, auth.username);
+					form_data['contact_number'], patient_addr.id, auth.username, form_data['dob'], form_data['gov_id']);
 				
 #	message = client.messages.create(to=form_data['phone_number'], from_=form_data['phone_number'],body=add_patient_message)
-				message = "Thanks for joining Speranza Health"
+				message = "Gracias para unir Speranza Health"
 
 				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
 					"payload":{"message": message, "recipients":[{"type": "mobile", "value": form_data['phone_number']}]}});
@@ -213,7 +217,6 @@ def add_patient(request):
 				return res;
 
 def add_manager(request):
-
 	res = {'msg':'Something has gone wrong'}
 	form_data = get_form_data(request)
 	
@@ -337,7 +340,22 @@ def edit_patient(request):
 		except:
 			res['msg'] = "Something went wrong trying to fetch your user_id please try again"
 			return res;
-
+def find_patient(request):
+	res = {'msg':'something has gone wrong'};
+	form_data = get_form_data(request)
+	if 'firstname' not in form_data or 'lastname' not in form_data or 'dob' not in form_data:
+		res['msg'] = 'Necesitamos mas informacion sobre el paciente, por favor hacer otra vez'
+		return res;
+	else:
+		patients = Patient.query.filter(Patient.firstname == form_data['firstname']).filter(Patient.lastname == form_data['lastname']).filter(Patient.dob == form_data['dob']);
+		ser_patients = [];
+		for patient in patients:
+			ser_pt= {'firstname':patient.firstname, 'lastname':patient.lastname, 'id':patient.id, 'dob':patient.dob}
+			ser_patients.append(ser_pt)
+		
+		res['msg'] = 'success'
+		res['patients'] = ser_patients
+		return res;
 def edit_patient_address(request):
 	res = {'msg':'something has gone wrong'};
 	form_data = get_form_data(request)

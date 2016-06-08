@@ -84,16 +84,18 @@ class Patient(db.Model):
 	# manager_id = Column(Integer, ForeignKey('managers.id'))
 	address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True);
 	manager_id = Column(Integer, ForeignKey('managers.id'), nullable=True)
-
+	dob = Column(DateTime, nullable=False)
+	gov_id = Column(Integer, nullable = False)
 	def __init__(self, firstname, lastname, phone_number, contact_number,
-			address_id, manager_id):
+			address_id, manager_id, dob, gov_id):
 		self.firstname = firstname;
 		self.lastname = lastname;
 		self.phone_number = phone_number;
 		self.contact_number = contact_number;
 		self.address_id = address_id;
 		self.manager_id = manager_id
-
+		self.dob = dob
+		self.gov_id = gov_id
 
 class Address(db.Model):
 	__tablename__ = 'addresses'
