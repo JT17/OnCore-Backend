@@ -51,7 +51,7 @@ def send_appointment_reminders_no_authentication():
 		 		if time_until_appointment <= datetime.timedelta(days=0):
 		 			message = "LATE APPONTMENT: " + message
 		 		print "Message: {0} \nNumber: {1} \nDate: {2}".format(message, patient.phone_number, appt.date)
-			#	send_message(message, patient.phone_number);
+				send_message(message, patient.phone_number);
 	except ValueError:
 		return str("Couldn't fetch your appointments something went wrong :(");
 
@@ -61,12 +61,12 @@ def send_diabetes_reminders():
 		for appt in db_pt_noinsulin:
 			patient = Patient.query.filter(Patient.id == appt.user_id).first()
 			message = "Hi {0}, \n realice su dieta, no olvide comer fruitas y verduras cada dia".format(patient.firstname)
-#			send_message(message, patient.phone_number);
+			send_message(message, patient.phone_number);
 		db_pt_insulin = Appointment.query.filter(Appointment.appt_type == 'insulina');
 		for appt in db_pt_insulin:
 			patient = Patient.query.filter(Patient.id == appt.user_id).first();
 			message = "Hi {0}, \n no olvide que necesita injectarse su insulina hoy, 30 minutos antes de tu desayuno y cena".format(patient.firstname)
-#			send_message(message, patient.phone_number);
+			send_message(message, patient.phone_number);
 
 	except ValueError, e:
 		return str(e);
@@ -104,7 +104,7 @@ def send_hemeonc_reminders():
 					if int(days_since) in messages:
 						patient = Patient.query.filter(Patient.id == appt.user_id).first();
 						message = messages[int(days_since)];
-#						send_message(message, patient.phone_number)
+						send_message(message, patient.phone_number)
 	except ValueError, e:
 		return str(e);
 
