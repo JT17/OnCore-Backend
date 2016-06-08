@@ -143,6 +143,14 @@ def edit_patient():
 	else:
 		return jsonify(status="500", value = str(res['msg']))
 
+@application.route('/api/find_patient', methods=['POST'])
+@auth.login_required
+def find_patient():
+	res = speranza_api.find_patient(request);
+	if res['msg'] == 'success':
+		return jsonify(status = '200', value = str(res['msg']), appts = res['appts'])
+	else:
+		return jsonify(status = '500', value = res['msg'])
 #requires user_id, old_date (date of first appt) and then new_date || appt_type
 #so can change either new_date and or appt_type
 #if you have neither it'll work but nothing happens
