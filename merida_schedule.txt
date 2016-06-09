@@ -1,0 +1,55 @@
+***********
+radiation
+Lunes
+11, 14, 20
+Martes
+15, 21, 23
+Miercoles
+16, 18, 20
+Jueves
+17, 21
+Viernes
+24, 14, 23
+Sabado
+18, 20
+Domingo
+21, 23
+*********** 
+chemo
+Lunes
+(1/4) 29, 25
+Martes
+(1/4) 34, 27, 26
+Miercoles
+30, 28
+Jueves
+31, 32
+Viernes
+33, 26
+Sabado
+28
+Domingo
+32
+***********
+palliative 
+Lunes
+35, 36
+Martes
+36
+Miercoles
+36, 37
+Jueves
+36
+Viernes
+36, 38
+Sabado
+36
+Domingo
+36
+***********
+followup
+Lunes
+(1/4) 40, 41
+Miercoles
+39
+***********
