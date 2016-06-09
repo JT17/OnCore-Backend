@@ -80,8 +80,6 @@ class Patient(db.Model):
 	lastname = Column(String(250), nullable=False);
 	phone_number = Column(Integer, nullable=False);
 	contact_number = Column(Integer, nullable=False);
-	# address_id = Column(Integer, ForeignKey('addresses.id'));
-	# manager_id = Column(Integer, ForeignKey('managers.id'))
 	address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True);
 	manager_id = Column(Integer, ForeignKey('managers.id'), nullable=True)
 	dob = Column(DateTime, nullable=False)

@@ -178,8 +178,10 @@ def add_patient(request):
 		return res;
 	if 'dob' not in form_data:
 		res['msg'] = 'Necesita dob, intenta otra vez'
+		return res;
 	if 'gov_id' not in form_data:
 		res['msg'] = 'Necesita gov_id, intenta otra vez'
+		return res;
 	try:
 		patient_addr = add_address(request);
 		if patient_addr is None:
@@ -189,15 +191,21 @@ def add_patient(request):
 		res['msg'] = str(err.args)
 		return res 
 	auth = request.authorization
+	print 'here1'
 	if auth.username:
+		print 'here2'
 		manager = Manager.query.filter(Manager.id == int(auth.username))
 		if manager == None:
 			res['msg'] = "sorry incorrect manager id, please resend form"
 			return res;
 		else:
 			try:
+				print 'here3'
+				#right now storing everything as a datetime, but we need to be consistent about this
+				import datetime
+				dob = datetime.datetime.utcfromtimestamp(float(form_data['dob']));
 				patient = Patient(form_data['firstname'], form_data['lastname'], form_data['phone_number'], 
-					form_data['contact_number'], patient_addr.id, auth.username, form_data['dob'], form_data['gov_id']);
+					form_data['contact_number'], patient_addr.id, auth.username, dob, form_data['gov_id']);
 				
 #	message = client.messages.create(to=form_data['phone_number'], from_=form_data['phone_number'],body=add_patient_message)
 				message = "Gracias para unir Speranza Health"
@@ -212,6 +220,7 @@ def add_patient(request):
 #				print res
 				return res;
 			except Exception, e:
+				print 'here4'
 				db.session.flush();
 				res['msg'] = str(e) 
 				return res;

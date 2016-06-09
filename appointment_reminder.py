@@ -26,6 +26,7 @@ def send_message(message, phone_number):
 	response = p.send_message(params)
 
 	# Prints the complete response
+	print params
 	print str(response)
 	return response
 
@@ -120,10 +121,10 @@ def send_merida_reminders():
 			if is_number(line) == True:
 				messages[int(line)] = next(treatment_messages)
 	
-		radiation_messages = {'0':[11,14,20], '1' = [15,21,23], '2' = [16, 18, 23], '3' = [17,21], '4' = [24, 14, 23], '5' = [18,20], '6'=[21,23]}
-		chemo_messages = {'0':[29,25], '1'=[34, 27, 26], '2'=[30,28], '3'=[31,32], '4'=[33,26], '5'=[28], '6'=[32]}
-		pall_messages = {'0': [35,36], '1'=[36], '2'=[36,37], '3'=[36], '4'=[36,38], '5'=[36], '6'=[36]}
-		follow_messages = {'0':[40,41],'1'=[], '2'=[39], '3'=[], '4'=[], '5'=[], '6'=[]}
+		radiation_messages = {'0':[11,14,20], '1':[15,21,23], '2' : [16, 18, 23], '3' : [17,21], '4' : [24, 14, 23], '5' : [18,20], '6':[21,23]}
+		chemo_messages = {'0':[29,25], '1':[34, 27, 26], '2':[30,28], '3':[31,32], '4':[33,26], '5':[28], '6':[32]}
+		pall_messages = {'0': [35,36], '1':[36], '2':[36,37], '3':[36], '4':[36,38], '5':[36], '6':[36]}
+		follow_messages = {'0':[40,41],'1':[], '2':[39], '3':[], '4':[], '5':[], '6':[]}
 		monthly = [29, 34, 40]
 		rad_pts = Patient.query.filter(Appointment.appt_type == 'MERIDA RADIOTERAPIA');
 		chemo_pts = Patient.query.filter(Appointment.appt_type == 'MERIDA QUIMOTERAPIA');
@@ -132,46 +133,47 @@ def send_merida_reminders():
 		
 		import datetime
 		from random import randint
-		today = datetime.datetime.weekday()
+		today = str(datetime.datetime.today().weekday())
 		for pt in rad_pts:
 			for val in radiation_messages[today]:
 				send_message(messages[val], pt.phone_number);
-				send_message(messages[val], pt.phone_number);
+				send_message(messages[val], pt.contact_number);
 		for pt in chemo_pts:
-			for val in chemo_pts[today]:
+			for val in chemo_messages[today]:
 				if val in monthly:
 					if datetime.datetime.today().day < 7:
 						send_message(messages[val], pt.phone_number);
-						send_message(messages[val], pt.phone_number);		
+						send_message(messages[val], pt.contact_number);		
 				else:
 					send_message(messages[val], pt.phone_number);
-					send_message(messages[val], pt.phone_number);		
+					send_message(messages[val], pt.contact_number);		
 		for pt in pall_pts:
-			for val in pall_pts[today]:
+			for val in pall_messages[today]:
 				if val in monthly:
 					if datetime.datetime.today().day < 7:
 						send_message(messages[val], pt.phone_number);
-						send_message(messages[val], pt.phone_number);		
+						send_message(messages[val], pt.contact_number);		
 				else:
 					send_message(messages[val], pt.phone_number);
-					send_message(messages[val], pt.phone_number);		
+					send_message(messages[val], pt.contact_number);		
 		for pt in follow_pts:
-			for val in follow_pts[today]:
+			for val in follow_messages[today]:
 				if val in monthly:
 					if datetime.datetime.today().day < 7:
 						send_message(messages[val], pt.phone_number);
-						send_message(messages[val], pt.phone_number);		
+						send_message(messages[val], pt.contact_number);		
 				else:
 					send_message(messages[val], pt.phone_number);
-					send_message(messages[val], pt.phone_number);		
+					send_message(messages[val], pt.contact_number);		
 			
 	except ValueError, e:
 		print str(e)
 		return str(e)
 #create_fake_appointments()
-send_appointment_reminders_no_authentication()
-send_hemeonc_reminders();
-send_diabetes_reminders()
+# send_appointment_reminders_no_authentication()
+#send_hemeonc_reminders()
+#send_diabetes_reminders()
+send_merida_reminders()
 # send_message('plivo test', '+0050250503232')
 # send_message('plivo test', '+15132629488')
 # send_message('test3 - Speranza Health', '0050250005833')

@@ -108,9 +108,7 @@ def add_manager():
 def get_patients():
 	pts = speranza_api.get_patients(request);
 	for val in pts:
-		print val.firstname
-		print val.id
-		print val.manager_id
+		print val.firstname, val.id, val.manager_id, val.phone_number, val.contact_number
 	return redirect('/');
 #another testing function
 @application.route('/get_appts', methods=['GET','POST'])
