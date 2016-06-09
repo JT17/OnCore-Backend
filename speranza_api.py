@@ -433,7 +433,7 @@ def delete_appt(request):
 		return res;
 	else:
 		import datetime
-		timestamp = datetime.datetime.utcfromtimestamp(int(form_data['date']));
+		timestamp = datetime.datetime.utcfromtimestamp(float(form_data['date']));
 		appt = Appointment.query.filter(Appointment.user_id == form_data['user_id']).filter(Appointment.date == timestamp)
 		if appt.first() is None:
 			res['msg'] = "Either user_id or date is wrong"
