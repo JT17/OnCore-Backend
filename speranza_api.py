@@ -367,7 +367,7 @@ def find_patient(request):
 					 'contact_number':patient.contact_number, 'street_num':address.street_num, 'street_name':address.street_name,
 					 'street_type':address.street_type, 'city_name':address.city_name, 'zipcode':address.zipcode, 'district':address.district,
 					 'manager_firstname':manager.firstname, 'manager_lastname':manager.lastname, 'manager_phone_number':manager.phone_number, 
-					 'manager_contact_number':manager.contact_number, 'dob':patient.dob, 'gov_id':patient.gov_id}
+					 'manager_contact_number':manager.contact_number, 'dob':patient.dob, 'gov_id':patient.gov_id, 'patient_id':patient.id}
 			ser_patients.append(ser_pt)
 		
 		res['msg'] = 'success'
