@@ -201,11 +201,11 @@ def add_patient(request):
 		else:
 			try:
 				print 'here3'
-				#right now storing everything as a datetime, but we need to be consistent about this
-				import datetime
-				dob = datetime.datetime.utcfromtimestamp(float(form_data['dob']));
+				# #right now storing everything as a datetime, but we need to be consistent about this
+				# import datetime
+				# dob = datetime.datetime.utcfromtimestamp(float(form_data['dob']));
 				patient = Patient(form_data['firstname'], form_data['lastname'], form_data['phone_number'], 
-					form_data['contact_number'], patient_addr.id, auth.username, dob, form_data['gov_id']);
+					form_data['contact_number'], patient_addr.id, auth.username, form_data['dob'], form_data['gov_id']);
 				
 #	message = client.messages.create(to=form_data['phone_number'], from_=form_data['phone_number'],body=add_patient_message)
 				message = "Gracias para unir Speranza Health"
@@ -338,6 +338,8 @@ def edit_patient(request):
 				if addr_res['msg'] != "success":
 					res['msg'] = addr_res['msg']
 					return res;
+			if 'dob' in form_data:
+				user.dob = form_data['dob']
 			try:
 				db.session.commit();
 				res['msg'] = "success"

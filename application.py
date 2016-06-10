@@ -146,7 +146,7 @@ def edit_patient():
 def find_patient():
 	res = speranza_api.find_patient(request);
 	if res['msg'] == 'success':
-		return jsonify(status = '200', value = str(res['msg']), appts = res['appts'])
+		return jsonify(status = '200', value = str(res['msg']), patients = res['patients'])
 	else:
 		return jsonify(status = '500', value = res['msg'])
 #requires user_id, old_date (date of first appt) and then new_date || appt_type

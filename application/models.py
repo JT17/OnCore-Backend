@@ -82,7 +82,7 @@ class Patient(db.Model):
 	contact_number = Column(Integer, nullable=False);
 	address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True);
 	manager_id = Column(Integer, ForeignKey('managers.id'), nullable=True)
-	dob = Column(DateTime, nullable=False)
+	dob = Column(String(250), nullable=False)
 	gov_id = Column(Integer, nullable = False)
 	def __init__(self, firstname, lastname, phone_number, contact_number,
 			address_id, manager_id, dob, gov_id):
