@@ -2,17 +2,7 @@ from application.models import *
 from flask import Flask, request, redirect, jsonify, g
 from dateutil import parser
 import requests
-
-# Download the twilio-python library from http://twilio.com/docs/libraries
- 
-# Find these values at https://twilio.com/user/account
-# account_sid = "AC67374f743c7b1e1625827c13822f5f2b"
-# auth_token = "b1a10dd37717ed58a50664a27e9a71c5"
-# client = TwilioRestClient(account_sid, auth_token)
-
-ADD_PATIENT_MESSAGE = "jointestgroup"
-FRONTLINESMS_API_KEY = "309fefe6-e619-4766-a4a2-53f0891fde23"
-FRONTLINESMS_WEBHOOK = "https://cloud.frontlinesms.com/api/1/webhook"
+from messenger import send_message
 
 def add_appt(request):
 	res = {'msg':'Sorry something went wrong'}
@@ -210,8 +200,9 @@ def add_patient(request):
 #	message = client.messages.create(to=form_data['phone_number'], from_=form_data['phone_number'],body=add_patient_message)
 				message = "Gracias para unir Speranza Health"
 
-				r = requests.post(FRONTLINESMS_WEBHOOK, json={"apiKey": FRONTLINESMS_API_KEY, 
-					"payload":{"message": message, "recipients":[{"type": "mobile", "value": form_data['phone_number']}]}});
+				r = send_message(message, patient.contact_number)
+				print r
+
 #				print form_data['phone_number']
 				db.session.add(patient);
 				db.session.commit();
