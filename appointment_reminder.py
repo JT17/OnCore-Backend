@@ -169,13 +169,14 @@ def send_merida_reminders():
 	except ValueError, e:
 		print str(e)
 		return str(e)
+
 #create_fake_appointments()
-# send_appointment_reminders_no_authentication()
-#send_hemeonc_reminders()
-#send_diabetes_reminders()
+
+send_appointment_reminders_no_authentication()
+send_hemeonc_reminders()
+send_diabetes_reminders()
 send_merida_reminders()
-# send_message('plivo test', '+0050250503232')
-# send_message('plivo test', '+15132629488')
+
 # send_message('test3 - Speranza Health', '0050250005833')
 # dr valvert's 00 502 5050 32 32
 # 1150250005833
