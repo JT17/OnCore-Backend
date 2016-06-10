@@ -361,7 +361,13 @@ def find_patient(request):
 		patients = Patient.query.filter(Patient.firstname == form_data['firstname']).filter(Patient.lastname == form_data['lastname']).filter(Patient.dob == form_data['dob']);
 		ser_patients = [];
 		for patient in patients:
-			ser_pt= {'firstname':patient.firstname, 'lastname':patient.lastname, 'id':patient.id, 'dob':patient.dob}
+			address = Address.query.filter(Address.id == patient.address_id).first()
+			manager = Manager.query.filter(Manager.id == patient.manager_id).first()
+			ser_pt= {'firstname':patient.firstname, 'lastname':patient.lastname, 'phone_number':patient.phone_number, 
+					 'contact_number':patient.contact_number, 'street_num':address.street_num, 'street_name':address.street_name,
+					 'street_type':address.street_type, 'city_name':address.city_name, 'zipcode':address.zipcode, 'district':address.district,
+					 'manager_firstname':manager.firstname, 'manager_lastname':manager.lastname, 'manager_phone_number':manager.phone_number, 
+					 'manager_contact_number':manager.contact_number, 'dob':patient.dob, 'gov_id':patient.gov_id}
 			ser_patients.append(ser_pt)
 		
 		res['msg'] = 'success'
