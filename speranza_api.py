@@ -345,25 +345,28 @@ def edit_patient(request):
 def find_patient(request):
 	res = {'msg':'something has gone wrong'};
 	form_data = get_form_data(request)
-	if 'firstname' not in form_data or 'lastname' not in form_data or 'dob' not in form_data:
+	if 'firstname' in form_data and 'lastname' in form_data and 'dob' in form_data:
+		patients = Patient.query.filter(Patient.firstname == form_data['firstname']).filter(Patient.lastname == form_data['lastname']).filter(Patient.dob == form_data['dob']);
+	elif 'patient_id' in form_data:
+		patients = Patient.query.filter(Patient.id == form_data['patient_id'])
+	else:
 		res['msg'] = 'Necesitamos mas informacion sobre el paciente, por favor hacer otra vez'
 		return res;
-	else:
-		patients = Patient.query.filter(Patient.firstname == form_data['firstname']).filter(Patient.lastname == form_data['lastname']).filter(Patient.dob == form_data['dob']);
-		ser_patients = [];
-		for patient in patients:
-			address = Address.query.filter(Address.id == patient.address_id).first()
-			manager = Manager.query.filter(Manager.id == patient.manager_id).first()
-			ser_pt= {'firstname':patient.firstname, 'lastname':patient.lastname, 'phone_number':patient.phone_number, 
-					 'contact_number':patient.contact_number, 'street_num':address.street_num, 'street_name':address.street_name,
-					 'street_type':address.street_type, 'city_name':address.city_name, 'zipcode':address.zipcode, 'district':address.district,
-					 'manager_firstname':manager.firstname, 'manager_lastname':manager.lastname, 'manager_phone_number':manager.phone_number, 
-					 'manager_contact_number':manager.contact_number, 'dob':patient.dob, 'gov_id':patient.gov_id, 'patient_id':patient.id}
-			ser_patients.append(ser_pt)
-		
-		res['msg'] = 'success'
-		res['patients'] = ser_patients
-		return res;
+	ser_patients = [];
+	for patient in patients:
+		address = Address.query.filter(Address.id == patient.address_id).first()
+		manager = Manager.query.filter(Manager.id == patient.manager_id).first()
+		ser_pt= {'firstname':patient.firstname, 'lastname':patient.lastname, 'phone_number':patient.phone_number, 
+				 'contact_number':patient.contact_number, 'street_num':address.street_num, 'street_name':address.street_name,
+				 'street_type':address.street_type, 'city_name':address.city_name, 'zipcode':address.zipcode, 'district':address.district,
+				 'manager_firstname':manager.firstname, 'manager_lastname':manager.lastname, 'manager_phone_number':manager.phone_number, 
+				 'manager_contact_number':manager.contact_number, 'dob':patient.dob, 'gov_id':patient.gov_id, 'patient_id':patient.id}
+		ser_patients.append(ser_pt)
+	
+	res['msg'] = 'success'
+	res['patients'] = ser_patients
+	return res;
+
 def edit_patient_address(request):
 	res = {'msg':'something has gone wrong'};
 	form_data = get_form_data(request)
