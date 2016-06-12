@@ -137,9 +137,11 @@ def add_address(request):
 		user_addr.district = form_data['district'];
 	
 	try:
+		print 'attempting to add address'
 		db.session.add(user_addr);
 		db.session.flush();
 	except Exception, e:
+		print 'exception adding address'
 		db.session.rollback()
 		# db.session.flush();
 		raise ValueError(str(e));
@@ -223,6 +225,8 @@ def add_manager(request):
 	if verify_new_user(request) == False:
 		res['msg'] = 'Invalid form, please try again'
 		return res;
+	print 'verified user'
+
 	try:
 		addr = add_address(request);
 		if addr is None:
@@ -231,7 +235,8 @@ def add_manager(request):
 	except ValueError as err:
 		res['msg'] = str(err.args)
 		return res; 
-	
+	print 'added address'
+
 	if form_data.has_key('password'):
 		manager = Manager(form_data['firstname'], form_data['lastname'],
 			       	form_data['phone_number'], form_data['contact_number'], 
