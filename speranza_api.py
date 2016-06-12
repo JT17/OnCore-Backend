@@ -141,7 +141,7 @@ def add_address(request):
 		db.session.add(user_addr);
 		db.session.flush();
 	except Exception, e:
-		print 'exception adding address'
+		print 'exception adding address ', str(e)
 		db.session.rollback()
 		# db.session.flush();
 		raise ValueError(str(e));
