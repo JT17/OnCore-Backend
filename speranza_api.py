@@ -237,13 +237,16 @@ def add_manager(request):
 			       	form_data['phone_number'], form_data['contact_number'], 
 				addr.id, form_data['password']);
 		try:
+			print 'trying to add manager'
 			db.session.add(manager);
 			db.session.commit();
 		except ValueError as err:
+			print 'ValueError in add manager'
 			db.session.flush();
 			res['msg'] = str(err.args);
 			return res;
 
+		print 'added manager successfully'
 		res['msg'] = 'success'
 		res['mgr_id'] = manager.id
 		return res

@@ -90,6 +90,7 @@ def add_patient():
 #street_num, street_name, street_type, city_name, zipcode, district
 @application.route('/api/add_manager', methods=['GET', 'POST'])
 def add_manager():
+	print 'add_manager called'
 	res = speranza_api.add_manager(request)
 	if res['msg'] == 'success':
 		return jsonify(status = '200', value = res['msg'], manager_id = res['mgr_id'])
