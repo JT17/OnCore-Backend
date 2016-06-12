@@ -355,8 +355,8 @@ def find_patient(request):
 	form_data = get_form_data(request)
 	if 'firstname' in form_data and 'lastname' in form_data and 'dob' in form_data:
 		patients = Patient.query.filter(Patient.firstname == form_data['firstname']).filter(Patient.lastname == form_data['lastname']).filter(Patient.dob == form_data['dob']);
-	elif 'patient_id' in form_data:
-		patients = Patient.query.filter(Patient.id == int(form_data['patient_id']))
+	elif 'gov_id' in form_data:
+		patients = Patient.query.filter(Patient.gov_id == int(form_data['gov_id']))
 	else:
 		res['msg'] = 'Necesitamos mas informacion sobre el paciente, por favor hacer otra vez'
 		return res;
