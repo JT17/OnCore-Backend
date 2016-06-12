@@ -15,6 +15,7 @@ from application.forms import *
 
 from flask import Flask, request, redirect, jsonify, g
 from subprocess import call
+from config import SQLALCHEMY_DATABASE_URI
 import os.path
 import speranza_api
 
@@ -227,7 +228,7 @@ def index():
 
 if __name__ == '__main__':
 	# call(['sudo', 'pip', 'install', '-r', 'requirements.txt'])
-	call(['sudo', 'python', 'db_create.py'])
-	if os.path.exists('./application/test.db'):
+	if SQLALCHEMY_DATABASE_URI == 'sqlite:///test.db':
+		call(['sudo', 'python', 'db_create.py'])
 		call(['sudo', 'chmod', '777', './application/test.db'])
 	application.run(host='0.0.0.0')
