@@ -14,7 +14,8 @@ from application.models import *
 from application.forms import *
 
 from flask import Flask, request, redirect, jsonify, g
-import twilio.twiml
+from subprocess import call
+import os.path
 import speranza_api
 
 # Elastic Beanstalk initalization
@@ -225,9 +226,8 @@ def index():
     return render_template('index.html', appts=[], patients=[])
 
 if __name__ == '__main__':
-# db.drop_all()
-#    db.create_all()
-    # import db_drop_everything
-    # db.drop_all()
-# db_drop_everything.drop_everything(db) # TODO this can't be good practice
-    application.run(host='0.0.0.0')
+	# call(['sudo', 'pip', 'install', '-r', 'requirements.txt'])
+	call(['sudo', 'python', 'db_create.py'])
+	if os.path.exists('./application/test.db'):
+		call(['sudo', 'chmod', '777', './application/test.db'])
+	application.run(host='0.0.0.0')
