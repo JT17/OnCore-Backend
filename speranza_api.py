@@ -4,6 +4,21 @@ from dateutil import parser
 import requests
 from messenger import send_message
 
+GUAT_COUNTRY_CODE = '502'
+USA_COUNTRY_CODE = '1'
+
+# TODO make this more robust
+def sanitize_phone_number(number):
+	print 'pre-sanitized', number
+	print len(number)
+	new_number = ''
+	if len(number) == 8:
+		new_number = GUAT_COUNTRY_CODE + str(number)
+	else:
+		new_number = str(number)
+	print 'post-sanitized', new_number
+	return new_number
+
 def add_appt(request):
 	res = {'msg':'Sorry something went wrong'}
 	form_data = get_form_data(request)
@@ -196,8 +211,11 @@ def add_patient(request):
 				# #right now storing everything as a datetime, but we need to be consistent about this
 				# import datetime
 				# dob = datetime.datetime.utcfromtimestamp(float(form_data['dob']));
-				patient = Patient(form_data['firstname'], form_data['lastname'], form_data['phone_number'], 
-					form_data['contact_number'], patient_addr.id, auth.username, form_data['dob'], form_data['gov_id']);
+				phone_number = sanitize_phone_number(form_data['phone_number'])
+				contact_number = sanitize_phone_number(form_data['contact_number'])
+				patient = Patient(form_data['firstname'], form_data['lastname'], phone_number, 
+					contact_number, patient_addr.id, auth.username, form_data['dob'], form_data['gov_id']);
+				print patient.phone_number, patient.contact_number
 				
 #	message = client.messages.create(to=form_data['phone_number'], from_=form_data['phone_number'],body=add_patient_message)
 				message = "Gracias para unir Speranza Health"
@@ -238,8 +256,10 @@ def add_manager(request):
 	print 'added address'
 
 	if form_data.has_key('password'):
+		phone_number = sanitize_phone_number(form_data['phone_number'])
+		contact_number = sanitize_phone_number(form_data['contact_number'])
 		manager = Manager(form_data['firstname'], form_data['lastname'],
-			       	form_data['phone_number'], form_data['contact_number'], 
+			       	phone_number, contact_number, 
 				addr.id, form_data['password']);
 		try:
 			print 'trying to add manager'
