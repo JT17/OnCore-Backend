@@ -198,25 +198,20 @@ def add_patient(request):
 		res['msg'] = str(err.args)
 		return res 
 	auth = request.authorization
-	print 'here1'
 	if auth.username:
-		print 'here2'
 		manager = Manager.query.filter(Manager.id == int(auth.username))
 		if manager == None:
 			res['msg'] = "sorry incorrect manager id, please resend form"
 			return res;
 		else:
 			try:
-				print 'here3'
 				# #right now storing everything as a datetime, but we need to be consistent about this
 				# import datetime
 				# dob = datetime.datetime.utcfromtimestamp(float(form_data['dob']));
-				phone_number = sanitize_phone_number(form_data['phone_number'])
-				contact_number = sanitize_phone_number(form_data['contact_number'])
-				patient = Patient(form_data['firstname'], form_data['lastname'], phone_number, 
-					contact_number, patient_addr.id, auth.username, form_data['dob'], form_data['gov_id']);
-				print patient.phone_number, patient.contact_number
-				
+				patient_phone_number = sanitize_phone_number(form_data['phone_number'])
+				patient_contact_number = sanitize_phone_number(form_data['contact_number'])
+				patient = Patient(form_data['firstname'], form_data['lastname'], patient_phone_number, 
+					patient_contact_number, patient_addr.id, auth.username, form_data['dob'], form_data['gov_id']);
 #	message = client.messages.create(to=form_data['phone_number'], from_=form_data['phone_number'],body=add_patient_message)
 				message = "Gracias para unir Speranza Health"
 
@@ -225,13 +220,15 @@ def add_patient(request):
 
 #				print form_data['phone_number']
 				db.session.add(patient);
+				print 'patient contact number post pre commit', patient.contact_number
 				db.session.commit();
+				print 'patient contact number post post commit', patient.contact_number
 				res['msg'] = 'success'
 				res['patient_id'] = patient.id
+				res['patient_contact_number'] = patient.contact_number
 #				print res
 				return res;
 			except Exception, e:
-				print 'here4'
 				db.session.flush();
 				res['msg'] = str(e) 
 				return res;

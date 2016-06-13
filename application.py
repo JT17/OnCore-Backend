@@ -82,7 +82,7 @@ def checkout_appt():
 def add_patient():
 	res = speranza_api.add_patient(request);
     	if (res['msg'] == "success"):
-		return jsonify(status="200",value=res['msg'], patient_id = res['patient_id'])
+		return jsonify(status="200",value=res['msg'], patient_id = res['patient_id'], patient_contact_number = res['patient_contact_number'])
 	else:
 		return jsonify(status="500", value=res['msg'])
 
