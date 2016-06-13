@@ -10,7 +10,7 @@ from sqlalchemy.schema import (
 
 from application import db
 
-def drop_everything(db):
+def drop_everything():
     conn = db.engine.connect()
 
     # the transaction only applies if the DB supports
@@ -47,3 +47,5 @@ def drop_everything(db):
         conn.execute(DropTable(table))
 
     trans.commit()
+
+drop_everything()

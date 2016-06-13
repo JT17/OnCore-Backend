@@ -229,7 +229,7 @@ def index():
 
 if __name__ == '__main__':
 	# call(['sudo', 'pip', 'install', '-r', 'requirements.txt'])
+	call(['sudo', 'python', 'db_create.py'])
 	if SQLALCHEMY_DATABASE_URI == 'sqlite:///test.db':
-		call(['sudo', 'python', 'db_create.py'])
 		call(['sudo', 'chmod', '777', './application/test.db'])
 	application.run(host='0.0.0.0')

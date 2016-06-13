@@ -17,7 +17,7 @@ def sanitize_phone_number(number):
 	else:
 		new_number = str(number)
 	print 'post-sanitized', new_number
-	return new_number
+	return int(new_number)
 
 def add_appt(request):
 	res = {'msg':'Sorry something went wrong'}
