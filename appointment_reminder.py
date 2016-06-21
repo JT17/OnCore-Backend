@@ -20,11 +20,11 @@ def send_appointment_reminders_no_authentication():
 			# print datetime.datetime.now() # TODO maybe should be utcnow?
 			time_until_appointment = appt.date - datetime.datetime.now()
 			print time_until_appointment
-		 	if time_until_appointment <= datetime.timedelta(days=1):
+		 	if time_until_appointment <= datetime.timedelta(days=1) and time_until_appointment >= datetime.timedelta(days=0):
 		 		patient = Patient.query.filter(Patient.id == appt.user_id).first()
 		 		message = "Hola {0}, \n no olvide que tiene una cita a las {1}".format(patient.firstname, str(appt.date))
-		 		if time_until_appointment <= datetime.timedelta(days=0):
-		 			message = "LATE APPONTMENT: " + message
+		 		# if time_until_appointment <= datetime.timedelta(days=0):
+		 		# 	message = "LATE APPONTMENT: " + message
 		 		print "Message: {0} \nNumber: {1} \nDate: {2}".format(message, patient.phone_number, appt.date)
 				send_message(message, patient.phone_number);
 	except ValueError:
@@ -32,16 +32,19 @@ def send_appointment_reminders_no_authentication():
 
 def send_diabetes_reminders():
 	try:
-		db_pt_noinsulin = Appointment.query.filter(Appointment.appt_type == 'no insulina');
-		for appt in db_pt_noinsulin:
-			patient = Patient.query.filter(Patient.id == appt.user_id).first()
-			message = "Hi {0}, \n realice su dieta, no olvide comer fruitas y verduras cada dia".format(patient.firstname)
-			send_message(message, patient.phone_number);
-		db_pt_insulin = Appointment.query.filter(Appointment.appt_type == 'insulina');
-		for appt in db_pt_insulin:
-			patient = Patient.query.filter(Patient.id == appt.user_id).first();
-			message = "Hi {0}, \n no olvide que necesita injectarse su insulina hoy, 30 minutos antes de tu desayuno y cena".format(patient.firstname)
-			send_message(message, patient.phone_number);
+		all_appts = Appointment.query.all()
+		print '# APPOINTMENTS: ', len(all_appts)
+		for appt in all_appts:
+			if str(appt.appt_type).lower() == 'no insulina':
+				patient = Patient.query.filter(Patient.id == appt.user_id).first()
+				message = "Hi {0}, \n realice su dieta, no olvide comer fruitas y verduras cada dia".format(patient.firstname)
+				send_message(message, patient.phone_number);
+
+			elif str(appt.appt_type).lower() == 'insulina':
+				print 'no insulina appt'
+				patient = Patient.query.filter(Patient.id == appt.user_id).first();
+				message = "Hi {0}, \n no olvide que necesita injectarse su insulina hoy, 30 minutos antes de tu desayuno y cena".format(patient.firstname)
+				send_message(message, patient.phone_number);
 
 	except ValueError, e:
 		return str(e);
@@ -100,10 +103,10 @@ def send_merida_reminders():
 		pall_messages = {'0': [35,36], '1':[36], '2':[36,37], '3':[36], '4':[36,38], '5':[36], '6':[36]}
 		follow_messages = {'0':[40,41],'1':[], '2':[39], '3':[], '4':[], '5':[], '6':[]}
 		monthly = [29, 34, 40]
-		rad_pts = Patient.query.filter(Appointment.appt_type == 'MERIDA RADIOTERAPIA');
-		chemo_pts = Patient.query.filter(Appointment.appt_type == 'MERIDA QUIMOTERAPIA');
-		pall_pts = Patient.query.filter(Appointment.appt_type == 'MERIDA CUIDADOS PALEATIVOS');
-		follow_pts = Patient.query.filter(Appointment.appt_type == 'MERIDA SEGUIMIENTO');
+		rad_pts = Patient.query.filter(str(Appointment.appt_type).upper() == 'MERIDA RADIOTERAPIA');
+		chemo_pts = Patient.query.filter(str(Appointment.appt_type).upper() == 'MERIDA QUIMOTERAPIA');
+		pall_pts = Patient.query.filter(str(Appointment.appt_type).upper() == 'MERIDA CUIDADOS PALEATIVOS');
+		follow_pts = Patient.query.filter(str(Appointment.appt_type).upper() == 'MERIDA SEGUIMIENTO');
 		
 		import datetime
 		from random import randint
