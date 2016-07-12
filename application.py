@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, make_response
 from flask.ext.httpauth import HTTPBasicAuth
 from application import db
 from application.models import *
@@ -8,7 +8,7 @@ from subprocess import call
 from config import SQLALCHEMY_DATABASE_URI
 import os.path
 import speranza_api
-from werkzeug.exceptions import default_exceptions
+from werkzeug.exceptions import default_exceptions, abort
 from helpers import make_json_error
 # Elastic Beanstalk initalization
 application = Flask(__name__)
@@ -43,7 +43,8 @@ def add_appt():
 	if (res['msg'] == "success"):
 		return jsonify(status="200", value=res['msg'])	
 	else:
-		return jsonify(status="500", value=res['msg'])
+		abort(500);
+		abort(Response(res['msg']))
 
 #requires user_id, date
 @application.route('/api/checkin', methods = ['GET', 'POST'])
@@ -75,7 +76,7 @@ def add_patient():
     	if (res['msg'] == "success"):
 		return jsonify(status="200",value=res['msg'], patient_id = res['patient_id'], patient_contact_number = res['patient_contact_number'])
 	else:
-		return jsonify(status="500", value=res['msg'])
+		abort(500,res['msg'])
 
 #requires firstname, lastname, phone_number, contact_number, password
 #street_num, street_name, street_type, city_name, zipcode, district
@@ -228,6 +229,6 @@ if __name__ == '__main__':
 	for code in default_exceptions.iterkeys():
 		application.error_handler_spec[None][code] = make_json_error
 	try:
-		application.run(host='0.0.0.0', debug=False)
+		application.run(host='0.0.0.0', debug=True)
 	except KeyboardInterrupt:
 		application.stop()
