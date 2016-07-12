@@ -18,7 +18,7 @@ from subprocess import call
 from config import SQLALCHEMY_DATABASE_URI
 import os.path
 import speranza_api
-
+from werkzeug.exceptions import default_exceptions, HTTPException
 # Elastic Beanstalk initalization
 application = Flask(__name__)
 application.debug=True
@@ -26,6 +26,14 @@ application.debug=True
 # app.secret_key = 'cC1YCIWOj9GgWspgNEo2'   
 application.secret_key = 'asdf'  
 auth = HTTPBasicAuth()
+
+#error handling for all exceptions ex
+def make_json_error(ex):
+	response = jsonify(message =str(ex))
+	response.status_code = (ex.code
+				if isinstance(ex, HTTPException)
+				else 500)
+	return response
 
 @auth.verify_password
 def verify_password(username_or_token, pwd):
@@ -36,13 +44,12 @@ def verify_password(username_or_token, pwd):
 def get_auth_token():
 	token = g.manager.generate_auth_token()
 	return jsonify({'token':token.decode('ascii')})
-
+#I like having this around to test various things but TODO is not push to server
 @application.route('/hello_monkey', methods=['GET', 'POST'])
-@auth.login_required
 def hello_monkey():
-    resp = twilio.twiml.Response();
-    resp.message("Hello, Mobile Monkey");
-    return str(resp)
+	print hi
+	resp.message("Hello, Mobile Monkey");
+	return str(resp)
 
 #requires user_id, date, appt_type in request form
 @application.route('/api/add_appt', methods=['GET', 'POST'])
@@ -232,4 +239,11 @@ if __name__ == '__main__':
 	call(['sudo', 'python', 'db_create.py'])
 	if SQLALCHEMY_DATABASE_URI == 'sqlite:///test.db':
 		call(['sudo', 'chmod', '777', './application/test.db'])
-	application.run(host='0.0.0.0')
+
+	#add custom error handling for all exceptions
+	for code in default_exceptions.iterkeys():
+		application.error_handler_spec[None][code] = make_json_error
+	try:
+		application.run(host='0.0.0.0', debug=False)
+	except KeyboardInterrupt:
+		application.stop()
