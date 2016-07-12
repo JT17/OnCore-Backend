@@ -1,8 +1,10 @@
-*.pyc #don't need the python object files to be pushed
+*.pyc
 application/*.pyc
+*.swp
+*.db
+test*.py
+venv/*
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
-*.pyc
-application/test.db

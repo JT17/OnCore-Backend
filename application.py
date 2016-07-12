@@ -1,24 +1,15 @@
-'''
-Simple Flask application to test deployment to Amazon Web Services
-Uses Elastic Beanstalk and RDS
-
-Author: Scott Rodkey - rodkeyscott@gmail.com
-
-Step-by-step tutorial: https://medium.com/@rodkey/deploying-a-flask-application-on-aws-a72daba6bb80
-'''
-
 from flask import Flask, render_template, request
 from flask.ext.httpauth import HTTPBasicAuth
 from application import db
 from application.models import *
 from application.forms import *
-
 from flask import Flask, request, redirect, jsonify, g
 from subprocess import call
 from config import SQLALCHEMY_DATABASE_URI
 import os.path
 import speranza_api
-from werkzeug.exceptions import default_exceptions, HTTPException
+from werkzeug.exceptions import default_exceptions
+from helpers import make_json_error
 # Elastic Beanstalk initalization
 application = Flask(__name__)
 application.debug=True
@@ -27,13 +18,6 @@ application.debug=True
 application.secret_key = 'asdf'  
 auth = HTTPBasicAuth()
 
-#error handling for all exceptions ex
-def make_json_error(ex):
-	response = jsonify(message =str(ex))
-	response.status_code = (ex.code
-				if isinstance(ex, HTTPException)
-				else 500)
-	return response
 
 @auth.verify_password
 def verify_password(username_or_token, pwd):
