@@ -1,22 +1,24 @@
 from application.models import *
-from flask import Flask, request, redirect, jsonify, g
+from flask import Flask, request, redirect, jsonify, g, abort
+import sqlalchemy.exc
 from dateutil import parser
 import requests
 from messenger import send_message
+from helpers import get_form_data
 
 GUAT_COUNTRY_CODE = '502'
 USA_COUNTRY_CODE = '1'
 
 # TODO make this more robust
 def sanitize_phone_number(number):
-	print 'pre-sanitized', number
-	print len(number)
+#	print 'pre-sanitized', number
+#	print len(number)
 	new_number = ''
 	if len(number) == 8:
 		new_number = GUAT_COUNTRY_CODE + str(number)
 	else:
 		new_number = str(number)
-	print 'post-sanitized', new_number
+#	print 'post-sanitized', new_number
 	return int(new_number)
 
 def add_appt(request):
@@ -27,38 +29,34 @@ def add_appt(request):
 		#error check that manager making appt is the patient's manager
 		patient = Patient.query.filter(Patient.id == form_data['user_id']).first();
 		if patient is None:
-			res['msg'] = 'Bad patient id'
-			res['bad_id'] = form_data['user_id']
-			return res 
+			abort(422, "La identificacion del paciente es incorrecto");
 		if len(form_data['appt_type']) == 0:
-			res['msg'] = 'Bad appt_type'
-			return res;
+			abort(422, "El appt_type es incorrecto");
 
 		auth = request.authorization
 		if patient.manager_id != int(auth.username):
-			res['msg'] = 'Wrong manager'
-			return res; 
+			abort(401, "La identificacion del gerente es incorrecto"); 
 		try:
 			#right now storing everything as a datetime, but we need to be consistent about this
 			import datetime
 			timestamp = datetime.datetime.utcfromtimestamp(float(form_data['date']));
 			exists = Appointment.query.filter(Appointment.user_id == form_data['user_id']).filter(Appointment.date == timestamp);
+
 			if exists.first() is not None:
-				res['msg'] = "Appt for this patient already exists at this date";
-				return res;
+				abort(422, "Ya existe una cita para este fecha");
+
 			new_appt = Appointment(form_data['user_id'], timestamp, form_data['appt_type']);
 			db.session.add(new_appt);
 			db.session.commit();
 			res['msg'] = 'success'
-		except Exception, e:
+		except sqlalchemy.exc.DatabaseError, e:
 			db.session.rollback()
-			res['msg'] = str(e)
+			abort(500, str(e))
 			#db.session.flush();
 			return res;
 		return res;
 	else:
-		res['msg'] = "Could not create new appt missing post values"
-		return res;
+		abort(422, "Necesitamos mas informacion, intenta otra vez por favor");
 
 def checkin_out(request, checkin = True):
 	res = {'msg':'Sorry something went wrong'}
@@ -67,45 +65,31 @@ def checkin_out(request, checkin = True):
 	if 'user_id' in form_data and 'date' in form_data:
 		patient = Patient.query.filter(Patient.id == form_data['user_id']).first();
 		if patient is None:
-			res['msg'] = 'Bad patient id'
-			return res;
+			abort(422, "La identificacion del paciente es incorrecto");
 		auth = request.authorization
 		if patient.manager_id != int(auth.username):
-			res['msg'] = 'Wrong manager'
-			return res;
+			abort(422, "La identificacion del gerente es incorrecto");
 		try:
 			import datetime
 			timestamp = datetime.datetime.utcfromtimestamp(float(form_data['date']))
 			appt = Appointment.query.filter(Appointment.user_id == form_data['user_id']).filter(Appointment.date == timestamp).first()
 			if appt is None:
-				res['msg'] = 'Cannot checkin for nonexistent appt, please try again';
-				return res;
+				abort(422, "La fecha es incorrecto, intenta otra vez por favor");
 			if checkin == True:
 				if appt.checkin == True:
-					res['msg'] = 'Already checked in'
-					return res;
+					abort(422, "Ya comprobado para este cita")
 				appt.checkin = True;
 			else:
 				if appt.checkout == True:
-					res['msg'] = 'Already checked out'
-					return res;
+					abort(422, "Ya desprotegido")
 				appt.checkout = True;
 			db.session.commit();
 			res['msg'] = 'success'
 			return res;
-		except Exception, e:
-			db.session.rollback();
-			res['msg'] = str(e);
-			return res;
+		except sqlalchemy.exc.DatabaseError, e:
+			abort(500, str(e))
 	else:
-		res['msg'] = 'Missing post values';
-		return res;	
-
-def get_form_data(request):
-	print request.get_json()
-	if request.get_json() == None:
-		return request.form
-	return request.get_json()
+		abort(422, "Necesita mas informacion, intenta otra vez por favor")
 		
 #returns False if invalid request, True otherwise
 def verify_new_user(request):
@@ -113,25 +97,21 @@ def verify_new_user(request):
 
 	if 'firstname' not in form_data or 'lastname' not in form_data or 'phone_number' not in form_data \
 		or 'contact_number' not in form_data: 
-		print "values are missing:"
 		if 'firstname' not in form_data:
-			print "missing firstname"
+			abort(422, "missing firstname")
 		if 'lastname' not in form_data:
-			print "missing lastname"
+			abort(422,"missing lastname")
 		if 'phone_number' not in form_data:
-			print "missing phone_number"
+			abort(422, "missing phone_number")
 		if 'contact_number' not in form_data:
-			print "missing contact_number"
-		return False;
+			abort(422, "missing contact_number")
 	if len(form_data['firstname']) == 0 or len(form_data['lastname']) == 0:
-		print "names are too short"
-		return False;
+		abort(422, "names are too short")
 	pn = form_data['phone_number'];
 	cn = form_data['contact_number'];
 #	if pn.isdigit() == False or cn.isdigit() == False or (len(pn) == 0) or (len(cn) == 0):
 #		print "phone number isn't digit"
 #		return False;
-	return True;
 
 #returns Address if valid, otherwise raises an error
 def add_address(request):
@@ -162,47 +142,26 @@ def add_address(request):
 		raise ValueError(str(e));
 	return user_addr;
 
-'''
-You can now access the endpoint https://cloud.frontlinesms.com/api/1/webhook
-
-This endpoint accepts POST Requests with JSON payloads
-
-The JSON payload should be in the following format:
-
-{"apiKey":"Your API Key", "payload":{"message":"Send a message from a remote app", 
-"recipients":[{ "type":"groupName", "value":"friends" }, { "type":"smartgroupName", "value":"humans" }, 
-{ "type":"contactName", "value":"bobby" }, { "type":"mobile", "value":"+1234567890" }, { "type":"mobile", "value":"+1234567891" }]}}
-
-API_KEY = "309fefe6-e619-4766-a4a2-53f0891fde23"
-'''
-	
 def add_patient(request):
 	res = {'msg':'something went wrong sorry'}
 	form_data = get_form_data(request)
 
-	if verify_new_user(request) == False:
-		res['msg'] = 'Invalid form, please try again'
-		return res;
+	verify_new_user(request)
 	if 'dob' not in form_data:
-		res['msg'] = 'Necesita dob, intenta otra vez'
-		return res;
+		abort(422, 'Necesita dob, intenta otra vez')
 	if 'gov_id' not in form_data:
-		res['msg'] = 'Necesita gov_id, intenta otra vez'
-		return res;
+		abort(422,'Necesita identificacion, intenta otra vez')
 	try:
 		patient_addr = add_address(request);
 		if patient_addr is None:
-			res['msg'] = 'Could not create patient address, please try again'
-			return res;
+			abort(500, 'Tenemos una problema con la aplicacion, por favor intenta otra vez')
 	except ValueError as err:
-		res['msg'] = str(err.args)
-		return res 
+		abort(500, str(err.args))
 	auth = request.authorization
 	if auth.username:
 		manager = Manager.query.filter(Manager.id == int(auth.username))
 		if manager == None:
-			res['msg'] = "sorry incorrect manager id, please resend form"
-			return res;
+			abort(401, 'La identificacion para el gerente es incorecto, por favor intenta otra vez')
 		else:
 			try:
 				# #right now storing everything as a datetime, but we need to be consistent about this
@@ -230,27 +189,19 @@ def add_patient(request):
 				return res;
 			except Exception, e:
 				db.session.flush();
-				res['msg'] = str(e) 
-				return res;
+				abort(500, str(e))
 
 def add_manager(request):
 	res = {'msg':'Something has gone wrong'}
 	form_data = get_form_data(request)
 	
-	if verify_new_user(request) == False:
-		res['msg'] = 'Invalid form, please try again'
-		return res;
-	print 'verified user'
-
+	verify_new_user(request) 
 	try:
 		addr = add_address(request);
 		if addr is None:
-			res['msg'] = "something has gone wrong creating an address, please try again"
-			return res;
+			abort(500, "Hay una problema con el server, por favor intenta otra vez")
 	except ValueError as err:
-		res['msg'] = str(err.args)
-		return res; 
-	print 'added address'
+		abort(500, str(err.args))
 
 	if form_data.has_key('password'):
 		phone_number = sanitize_phone_number(form_data['phone_number'])
@@ -259,22 +210,18 @@ def add_manager(request):
 			       	phone_number, contact_number, 
 				addr.id, form_data['password']);
 		try:
-			print 'trying to add manager'
 			db.session.add(manager);
 			db.session.commit();
 		except ValueError as err:
-			print 'ValueError in add manager'
 			db.session.flush();
-			res['msg'] = str(err.args);
-			return res;
+			abort(500, str(err.args))
 
-		print 'added manager successfully'
 		res['msg'] = 'success'
 		res['mgr_id'] = manager.id
 		return res
 	else:
-		res['msg'] = 'No password entered'
-		return res;
+		#TODO check spanish for password
+		abort(422, "Necesita una contrasena")
 
 def get_managers(request):
 	managers = Manager.query.all();
@@ -319,41 +266,34 @@ def get_user_appts(request):
 		return res;
 	except ValueError, e:
 		db.session.rollback();
-		res['msg'] = str(e) 
-		return res;
+		abort(500, str(e));
 
 def edit_patient(request):
 	res = {'msg':"something has gone wrong"};
 	form_data = get_form_data(request)
 
 	if 'user_id' not in form_data:
-		res['msg'] = "Could not edit patient, missing user_id in form";
-		return res;
+		abort(422, "No podemos editar el paciente, necesita user_id")
 	else:
 		try:
 			auth = request.authorization;
 			user = Patient.query.filter(Patient.id == form_data['user_id']).first();
 			if user is None:
-				res['msg'] = "Invalid patient id"
-				return res;
+				abort(422,  "Invalid patient id")
 			if user.manager_id != int(auth.username):
-				res['msg'] = "Invalid manager"
+				abort(422,  "Invalid manager")
 				return res;
 			if 'phone_number' in form_data:
 				if form_data['phone_number'].isdigit() == False or (len(form_data['phone_number']) == 0):
-					res['msg'] = 'Please enter a valid phone number'
-					return res;
+					abort(422, 'Please enter a valid phone number')
 				user.phone_number = form_data['phone_number']
 			if 'contact_number' in form_data:
 				if form_data['contact_number'].isdigit() == False:
-					res['msg'] = 'Please enter a valid contact number'
+					abort(422, 'Please enter a valid contact number')
 					return res;
 				user.contact_number = form_data['contact_number']
 			if 'edit_address' in form_data:
-				addr_res = edit_patient_address(request);
-				if addr_res['msg'] != "success":
-					res['msg'] = addr_res['msg']
-					return res;
+				edit_patient_address(request);
 			if 'dob' in form_data:
 				user.dob = form_data['dob']
 			try:
@@ -362,11 +302,10 @@ def edit_patient(request):
 				return res;
 			except:
 				db.session.rollback();
-				res['msg'] = "Something went wrong, couldn't update"
-				return res;
-		except:
-			res['msg'] = "Something went wrong trying to fetch your user_id please try again"
-			return res;
+				abort(500, "Something went wrong, couldn't update")
+		except ValueError, e:
+			abort(500, "Something went wrong trying to fetch your user_id please try again")
+
 def find_patient(request):
 	res = {'msg':'something has gone wrong'};
 	form_data = get_form_data(request)
@@ -375,8 +314,8 @@ def find_patient(request):
 	elif 'gov_id' in form_data:
 		patients = Patient.query.filter(Patient.gov_id == int(form_data['gov_id']))
 	else:
-		res['msg'] = 'Necesitamos mas informacion sobre el paciente, por favor hacer otra vez'
-		return res;
+		abort(422, 'Necesitamos mas informacion sobre el paciente, por favor hacer otra vez')
+
 	ser_patients = [];
 	for patient in patients:
 		address = Address.query.filter(Address.id == patient.address_id).first()
@@ -387,7 +326,10 @@ def find_patient(request):
 				 'manager_firstname':manager.firstname, 'manager_lastname':manager.lastname, 'manager_phone_number':manager.phone_number, 
 				 'manager_contact_number':manager.contact_number, 'dob':patient.dob, 'gov_id':patient.gov_id, 'patient_id':patient.id}
 		ser_patients.append(ser_pt)
-	
+
+	if len(ser_patients) == 0:
+		abort(422, "No hay pacientes con este informacion")	
+
 	res['msg'] = 'success'
 	res['patients'] = ser_patients
 	return res;
@@ -397,17 +339,14 @@ def edit_patient_address(request):
 	form_data = get_form_data(request)
 
 	if 'user_id' not in form_data:
-		res['msg'] = "Could not edit patient, missing user_id in form";
-		return res;
+		abort(422, "Could not edit patient, missing user_id in form")
 	else:
 		user = Patient.query.filter(Patient.id == form_data['user_id']).first();
 		if user is None:
-			res['msg'] = "something went wrong"
-			return res;
+			abort(500,  "something went wrong")
 		address = Address.query.filter(Address.id == user.address_id).first()
 		if address is None:
-			res['msg'] = "Something went wrong fetching the address"
-			return res;
+			abort(500, "Something went wrong fetching the address")
 		if 'street_num' in form_data:
 			address.street_num = form_data['street_num']
 		if 'street_name' in form_data:
@@ -422,26 +361,22 @@ def edit_patient_address(request):
 			address.district = form_data['district']
 		try:
 			db.session.commit();
-			res['msg'] = "success";
-			return res;
 		except:
 			db.session.rollback();
-			return res;	
+			abort(500, "something went wrong")
 
 def edit_appt(request):
 	res = {'msg':'something has gone wrong'};
 	form_data = get_form_data(request)
 
 	if 'user_id' not in form_data or 'old_date' not in form_data:
-		res['msg'] = "Could not edit appt, missing user_id or date in form";
-		return res;
+		abort(422, "Could not edit appt, missing user_id or date in form")
 	else:
 		import datetime
 		timestamp = datetime.datetime.utcfromtimestamp(int(form_data['old_date']));
 		appt = Appointment.query.filter(Appointment.user_id == form_data['user_id']).filter(Appointment.date == timestamp).first()
 		if appt is None:
-			res['msg'] = "Either user id or date is wrong"
-			return res;
+			abort(422, "Necesitamos la identificacion del usario o la fecha")
 		changed = False;
 		if 'new_date' in form_data:
 			new_timestamp = datetime.datetime.utcfromtimestamp(int(form_data['new_date']));
@@ -456,54 +391,46 @@ def edit_appt(request):
 			res['msg'] = "success";
 			return res;
 		except ValueError, e:
-			res['msg'] = str(e)
 			db.session.rollback();
-			return res;
+			abort(500, str(e));
 
 def delete_appt(request):
 	res = {'msg':'something has gone wrong'};
 	form_data = get_form_data(request)
 
 	if 'user_id' not in form_data or 'date' not in form_data:
-		res['msg'] = "Could not delete appt, missing user_id or date in form";
-		return res;
+		abort(422, "No podemos borrar la cita, necesitamos la identificacion del usario o la fecha") 
 	else:
 		import datetime
 		timestamp = datetime.datetime.utcfromtimestamp(float(form_data['date']));
 		appt = Appointment.query.filter(Appointment.user_id == form_data['user_id']).filter(Appointment.date == timestamp)
 		if appt.first() is None:
-			res['msg'] = "Either user_id or date is wrong"
-			return res;
+			abort(422, "Necesitamos la identificacion del usario o la fecha")
 		try:
 			appt.delete();
 			db.session.commit();
 			res['msg'] = 'success';
 			return res;
 		except ValueError, e:
-			res['msg'] = str(e) 
-			return res;	
+			db.session.rollback();
+			abort(500, str(e))
 
 def delete_patient(request):
 	res = {'msg':'something has gone wrong'}
 	form_data = get_form_data(request)
 
 	if 'user_id' not in form_data:
-		res['msg'] = "Could not delete patient, missing user_id in form";
-		return res;
+		abort(422, "No podemos borrar el paciente,  necesitamos la identificacion del usario")
 	auth = request.authorization
 	user = Patient.query.filter(Patient.id == form_data['user_id'])
 	if user.first() is None:
-		res['msg'] = 'invalid user id'
-		return res;
+		abort(422, "La identificacion es incorrecto")
 	if user.first().manager_id != int(auth.username):
-		res['msg'] = 'invalid manager id'
-		return res;	
+		abort(422, "La identificacion del gerente es incorrecto") 
 	try:
 		user.delete();
 		db.session.commit();
 		res['msg'] = 'success'
 		return res;
 	except:
-		res['msg'] = "delete failed"
-		return res;	
-		
+		abort(500,  "borrar ha fallado")

@@ -43,8 +43,7 @@ def add_appt():
 	if (res['msg'] == "success"):
 		return jsonify(status="200", value=res['msg'])	
 	else:
-		abort(500);
-		abort(Response(res['msg']))
+		abort(500, res['msg']);
 
 #requires user_id, date
 @application.route('/api/checkin', methods = ['GET', 'POST'])
@@ -54,7 +53,7 @@ def checkin_appt():
 	if res['msg'] == 'success':
 		return jsonify(status='200', value = res['msg'])
 	else:
-		return jsonify(status='500', value=res['msg'])
+		abort(500, res['msg'])
 
 #requires user_id, date
 @application.route('/api/checkout', methods = ['GET', 'POST'])
@@ -64,7 +63,7 @@ def checkout_appt():
 	if res['msg'] == 'success':
 		return jsonify(status = '200', value = res['msg'])
 	else:
-		return jsonify(status = '500', value = res['msg'])
+		abort(500, res['msg'])
 
 
 #requires firstname, lastname, phone_number, contact_number, street_num, street_name
@@ -76,7 +75,7 @@ def add_patient():
     	if (res['msg'] == "success"):
 		return jsonify(status="200",value=res['msg'], patient_id = res['patient_id'], patient_contact_number = res['patient_contact_number'])
 	else:
-		abort(500,res['msg'])
+		abort(500)
 
 #requires firstname, lastname, phone_number, contact_number, password
 #street_num, street_name, street_type, city_name, zipcode, district
@@ -87,7 +86,7 @@ def add_manager():
 	if res['msg'] == 'success':
 		return jsonify(status = '200', value = res['msg'], manager_id = res['mgr_id'])
 	else:
-		return jsonify(status = '500', value = res['msg'])
+		abort(500, res['msg'])
 
 #this is a testing function but should not be exposed to any actual users
 # @application.route('api/get_managers', methods=['GET', 'POST'])
@@ -123,7 +122,7 @@ def get_user_appts():
 	if res['msg'] == 'success':
 		return jsonify(status= '200', value = str(res['msg']), appts = res['appts'] )
 	else:
-		return jsonify(status="500", value = res['msg']);
+		abort(500, res['msg'])
 
 #requires user_id and then any user fields you want to change including address
 #can't change user's names however
@@ -134,7 +133,11 @@ def edit_patient():
 	if res['msg'] == 'success':
 		return jsonify(status="200", value = str(res['msg']))
 	else:
-		return jsonify(status="500", value = str(res['msg']))
+		abort(500, res['msg'])
+
+@application.route('/api/iamateapot', methods=['POST'])
+def iamateapot():
+	abort(418, "I am a teapot short and stout");
 
 @application.route('/api/find_patient', methods=['POST'])
 @auth.login_required
@@ -143,7 +146,8 @@ def find_patient():
 	if res['msg'] == 'success':
 		return jsonify(status = '200', value = str(res['msg']), patients = res['patients'])
 	else:
-		return jsonify(status = '500', value = res['msg'])
+		abort(500, res['msg'])
+
 #requires user_id, old_date (date of first appt) and then new_date || appt_type
 #so can change either new_date and or appt_type
 #if you have neither it'll work but nothing happens
@@ -154,19 +158,17 @@ def edit_appt():
 	if res['msg'] == 'success':
 		return jsonify(status='200', value = str(res['msg']))
 	else:
-		return jsonify(status = '500', value = str(res['msg']))
+		abort(500, res['msg'])
 
 #requires user_id and date
 @application.route('/api/delete_appt', methods = ['GET', 'POST'])
 @auth.login_required
 def delete_appt():
-	print "delete hit"
-	res = {'msg':'wtf'}
 	res = speranza_api.delete_appt(request);
 	if res['msg'] == 'success':
 		return jsonify(status='200', value = str(res['msg']))
 	else:
-		return jsonify(status='500', value = str(res['msg']))
+		abort(500, res['msg'])
 
 #requires user_id
 @application.route('/api/delete_patient', methods = ['GET', 'POST'])
@@ -176,7 +178,7 @@ def delete_patient():
 	if res['msg'] == 'success':
 		return jsonify(status='200', value = str(res['msg']))
 	else:
-		return jsonify(status='500', value = str(res['msg']))
+		abort(500, res['msg'])
 
 @application.route("/", methods=['GET', 'POST'])
 def index():
