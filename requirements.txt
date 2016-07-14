@@ -35,3 +35,4 @@ wcwidth==0.1.6
 websocket-client==0.35.0
 Werkzeug==0.9.6
 WTForms==2.0.1
+slackclient==1.0.0

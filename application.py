@@ -9,7 +9,7 @@ from config import SQLALCHEMY_DATABASE_URI
 import os.path
 import speranza_api
 from werkzeug.exceptions import default_exceptions, abort
-from helpers import handle_error 
+from error_handling import handle_error 
 # Elastic Beanstalk initalization
 application = Flask(__name__)
 application.debug=True
