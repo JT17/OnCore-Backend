@@ -9,8 +9,10 @@ def handle_error(ex):
 			'status':ex.code,
 			'val':ex.description
 	}
-
-	if(ex.code == 500):
+	
+	#kinda hacky but i want to catch all 5xx errors as server errors
+	#to get first digit cast int to string then index, then to compare to 5 cast back to int lol
+	if(int(str(ex.code)[0]) == 5):
 		logging.basicConfig(format='%(asctime)s : %(levelname)s - %(message)s', filename= ERR_LOG, level=logging.DEBUG);
 		logging.error(ex.description)
 	else:
