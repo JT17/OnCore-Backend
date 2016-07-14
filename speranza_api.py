@@ -145,8 +145,8 @@ def add_address(request):
 def add_patient(request):
 	res = {'msg':'something went wrong sorry'}
 	form_data = get_form_data(request)
-
 	verify_new_user(request)
+	abort(500, 'test logging')
 	if 'dob' not in form_data:
 		abort(422, 'Necesita dob, intenta otra vez')
 	if 'gov_id' not in form_data:

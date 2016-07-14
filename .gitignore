@@ -4,6 +4,7 @@ application/*.pyc
 *.db
 test*.py
 venv/*
+application/logs/*
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml

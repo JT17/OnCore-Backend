@@ -1,13 +1,22 @@
 from werkzeug.exceptions import HTTPException
 from flask import jsonify
+import logging
+ERR_LOG = './application/logs/speranza_error.log'
+DEBUG_LOG = './application/logs/speranza_debug.log'
 #error handling for all exceptions ex
-def make_json_error(ex):
-	print "HI!"
+def handle_error(ex):
 	message = {
 			'status':ex.code,
 			'val':ex.description
 	}
-	print message
+
+	if(ex.code == 500):
+		logging.basicConfig(format='%(asctime)s : %(levelname)s - %(message)s', filename= ERR_LOG, level=logging.DEBUG);
+		logging.error(ex.description)
+	else:
+		logging.basicConfig(format='%(asctime)s : %(levelname)s - %(message)s', filename= DEBUG_LOG , level=logging.DEBUG);
+		logging.debug(ex.description)
+
 	response = jsonify(message);
 	response.status_code = (ex.code
 				if isinstance(ex, HTTPException)

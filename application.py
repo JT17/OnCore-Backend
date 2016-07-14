@@ -9,7 +9,7 @@ from config import SQLALCHEMY_DATABASE_URI
 import os.path
 import speranza_api
 from werkzeug.exceptions import default_exceptions, abort
-from helpers import make_json_error
+from helpers import handle_error 
 # Elastic Beanstalk initalization
 application = Flask(__name__)
 application.debug=True
@@ -229,7 +229,7 @@ if __name__ == '__main__':
 
 	#add custom error handling for all exceptions
 	for code in default_exceptions.iterkeys():
-		application.error_handler_spec[None][code] = make_json_error
+		application.error_handler_spec[None][code] = handle_error 
 	try:
 		application.run(host='0.0.0.0', debug=True)
 	except KeyboardInterrupt:
