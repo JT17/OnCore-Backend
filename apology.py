@@ -12,7 +12,7 @@ def send_apologies():
 		numbers = [FILL IN HERE]	
 		for num in numbers:
 			print num
-			message = "Hola. Los sentimos para enviarse los mensajes anteayer. Fue un error, y puede ignorarlos. Los sientos!"
+			message = "Perdon. Los sentimos para enviarse los mensajes anteayer. Fue un error, y puede ignorarlos. Gracias por su comprension"
 			send_message(message, num);
 	except ValueError, e:
 		return str(e);
