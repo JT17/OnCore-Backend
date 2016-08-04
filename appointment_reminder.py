@@ -148,7 +148,8 @@ def send_merida_reminders():
 		return str(e)
 
 #create_fake_appointments()
-
+all_pts = Patient.query.all();
+print "total patients: ", len(all_pts)
 send_appointment_reminders_no_authentication()
 send_hemeonc_reminders()
 send_diabetes_reminders()
