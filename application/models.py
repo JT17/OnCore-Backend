@@ -5,16 +5,20 @@ from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, Boolean
 from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
 from __init__ import db, application as app
 
+patient_organization_table = db.Table('patient_organization_table',
+					db.Column('patient_id', db.Integer, db.ForeignKey('patients.id'), nullable=False),
+					db.Column('org_id', db.Integer, db.ForeignKey('organizations.id'), nullable=False),
+					db.PrimaryKeyConstraint('patient_id','org_id'))
 class Appointment(db.Model):
 	__tablename__ = 'appointments'
 	id = Column(Integer, primary_key=True)
-	user_id = Column(Integer,ForeignKey('patients.id'))
+	patient_id = Column(Integer,ForeignKey('patients.id'))
 	date = Column(DateTime, nullable=False)
 	appt_type = Column(String(250), nullable=False);
 	checkin = Column(Boolean, nullable = False);
 	checkout = Column(Boolean, nullable = False);
-	def __init__(self, user_id, date, appt_type):
-		self.user_id = user_id 
+	def __init__(self, patient_id, date, appt_type):
+		self.patient_id = patient_id 
 		self.date = date 
 		self.appt_type = appt_type
 		self.checkin = False;
@@ -23,7 +27,7 @@ class Appointment(db.Model):
 		"""Return object data in easily serializable format"""
 		return{
 			'id':self.id,
-			'user_id':self.user_id,
+			'patient_id':self.patient_id,
 			'date':self.date,
 			'appt_type':self.appt_type,
 			'checkin':self.checkin,
@@ -40,18 +44,17 @@ class Manager(db.Model):
 	firstname = db.Column(String(250), nullable=False);
 	lastname = db.Column(String(250), nullable=False);
 	phone_number = db.Column(Integer, nullable=False);
-	contact_number = db.Column(Integer, nullable=False);
-	address_id = db.Column(Integer, ForeignKey('addresses.id'));
+	email = db.Column(String(250), nullable=False);
 	password = db.Column(String(128))
-
+	org_id = db.Column(Integer, ForeignKey('organizations'), nullable=True)
 	def __init__(self, firstname, lastname, phone_number, contact_number,
 			address_id, password):
 		self.firstname = firstname;
 		self.lastname = lastname;
 		self.phone_number = phone_number;
-		self.contact_number = contact_number;
-		self.address_id = address_id;
+		self.email = email;
 		self.password = pwd_context.encrypt(password) 
+		self.org_id = 0;
 	
 	def verify_password(self, password):
 		return pwd_context.verify(password, self.password);
@@ -81,17 +84,16 @@ class Patient(db.Model):
 	phone_number = Column(Integer, nullable=False);
 	contact_number = Column(Integer, nullable=False);
 	address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True);
-	manager_id = Column(Integer, ForeignKey('managers.id'), nullable=True)
 	dob = Column(String(250), nullable=False)
 	gov_id = Column(Integer, nullable = False)
 	def __init__(self, firstname, lastname, phone_number, contact_number,
-			address_id, manager_id, dob, gov_id):
+			address_id, dob, gov_id):
 		self.firstname = firstname;
 		self.lastname = lastname;
 		self.phone_number = phone_number;
 		self.contact_number = contact_number;
 		self.address_id = address_id;
-		self.manager_id = manager_id
+		self.manager_id = organization_id; 
 		self.dob = dob
 		self.gov_id = gov_id
 
@@ -114,4 +116,22 @@ class Address(db.Model):
 		self.city_name = city_name;
 		self.zipcode = zipcode;
 		self.district = district
-	
+
+class Organization(db.Model):
+	__tablename__ = 'organizations'
+
+	id = Column(Integer, primary_key=True);
+	org_name = Column(String(250), nullable=False);
+	org_pwd= Column(String(250), nullable=True);
+	admin_id = Column(Integer, ForeignKey('managers.id'), nullable=False)
+	org_email = Column(String(250), nullable=True);
+
+	def __init__(self, org_name, org_pwd, admin_id, org_email=None):
+		admin = Manager.query.get(admin_id);
+		if(admin is None):
+			raise ValueError('Admin_id is invalid')
+		self.org_name = org_name;
+		self.org_pwd = org_pwd;
+		self.admin_id = admin_id;
+		if(org_email is not None):
+			self.org_email = org_email;
