@@ -9,6 +9,11 @@ patient_organization_table = db.Table('patient_organization_table',
 					db.Column('patient_id', db.Integer, db.ForeignKey('patients.id'), nullable=False),
 					db.Column('org_id', db.Integer, db.ForeignKey('organizations.id'), nullable=False),
 					db.PrimaryKeyConstraint('patient_id','org_id'))
+
+manager_organization_table = db.Table('manager_organization_table',
+					db.Column('manager_id', db.Integer, db.ForeignKey('managers.id'), nullable=False),
+					db.Column('org_id', db.Integer, db.ForeignKey('organizations.id'), nullable=False),
+					db.PrimaryKeyConstraint('manager_id', 'org_id'))
 class Appointment(db.Model):
 	__tablename__ = 'appointments'
 	id = Column(Integer, primary_key=True)
@@ -46,7 +51,7 @@ class Manager(db.Model):
 	phone_number = db.Column(Integer, nullable=False);
 	email = db.Column(String(250), nullable=False);
 	password = db.Column(String(128))
-	org_id = db.Column(Integer, ForeignKey('organizations'), nullable=True)
+	org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'))
 	def __init__(self, firstname, lastname, phone_number, contact_number,
 			address_id, password):
 		self.firstname = firstname;
@@ -86,6 +91,8 @@ class Patient(db.Model):
 	address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True);
 	dob = Column(String(250), nullable=False)
 	gov_id = Column(Integer, nullable = False)
+	organizations = db.relationship('Organization', backref='patient');
+
 	def __init__(self, firstname, lastname, phone_number, contact_number,
 			address_id, dob, gov_id):
 		self.firstname = firstname;
@@ -123,15 +130,11 @@ class Organization(db.Model):
 	id = Column(Integer, primary_key=True);
 	org_name = Column(String(250), nullable=False);
 	org_pwd= Column(String(250), nullable=True);
-	admin_id = Column(Integer, ForeignKey('managers.id'), nullable=False)
+	admins = db.relationship('Admin')
 	org_email = Column(String(250), nullable=True);
 
-	def __init__(self, org_name, org_pwd, admin_id, org_email=None):
-		admin = Manager.query.get(admin_id);
-		if(admin is None):
-			raise ValueError('Admin_id is invalid')
+	def __init__(self, org_name, org_pwd, org_email=None):
 		self.org_name = org_name;
 		self.org_pwd = org_pwd;
-		self.admin_id = admin_id;
 		if(org_email is not None):
 			self.org_email = org_email;
