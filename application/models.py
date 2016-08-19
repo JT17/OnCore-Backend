@@ -18,12 +18,14 @@ class Appointment(db.Model):
 	__tablename__ = 'appointments'
 	id = Column(Integer, primary_key=True)
 	patient_id = Column(Integer,ForeignKey('patients.id'))
+	manager_id = Column(Integer, ForeignKey('managers.id'), nullable=True)
 	date = Column(DateTime, nullable=False)
 	appt_type = Column(String(250), nullable=False);
 	checkin = Column(Boolean, nullable = False);
 	checkout = Column(Boolean, nullable = False);
-	def __init__(self, patient_id, date, appt_type):
+	def __init__(self, patient_id, manager_id, date, appt_type):
 		self.patient_id = patient_id 
+		self.manager_id = manager_id
 		self.date = date 
 		self.appt_type = appt_type
 		self.checkin = False;
@@ -91,7 +93,7 @@ class Patient(db.Model):
 	address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True);
 	dob = Column(String(250), nullable=False)
 	gov_id = Column(Integer, nullable = False)
-	organizations = db.relationship('Organization', backref='patient');
+	organizations = db.relationship('organizations', secondary=patient_organization_table, backref='patients');
 
 	def __init__(self, firstname, lastname, phone_number, contact_number,
 			address_id, dob, gov_id):
@@ -100,10 +102,11 @@ class Patient(db.Model):
 		self.phone_number = phone_number;
 		self.contact_number = contact_number;
 		self.address_id = address_id;
-		self.manager_id = organization_id; 
 		self.dob = dob
 		self.gov_id = gov_id
-
+	
+	def grant_access(self, org_id):
+		return self.organizations.filter(organizations.id == org_id)
 class Address(db.Model):
 	__tablename__ = 'addresses'
 

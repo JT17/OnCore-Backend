@@ -20,7 +20,9 @@ def sanitize_phone_number(number):
 		new_number = str(number)
 #	print 'post-sanitized', new_number
 	return int(new_number)
-
+def verify_manager_access(patient, auth):
+	manager = Manager.query.filter(Manager.id == int(auth.username))
+	return patient.grant_access(manager.org_id)
 def add_appt(request):
 	res = {'msg':'Sorry something went wrong'}
 	form_data = get_form_data(request)
@@ -33,8 +35,7 @@ def add_appt(request):
 		if len(form_data['appt_type']) == 0:
 			abort(422, "El appt_type es incorrecto");
 
-		auth = request.authorization
-		if patient.manager_id != int(auth.username):
+		if verify_manager_access(patient, request.authorization) == False:
 			abort(401, "La identificacion del gerente es incorrecto"); 
 		try:
 			#right now storing everything as a datetime, but we need to be consistent about this
@@ -45,7 +46,7 @@ def add_appt(request):
 			if exists.first() is not None:
 				abort(422, "Ya existe una cita para este fecha");
 
-			new_appt = Appointment(form_data['user_id'], timestamp, form_data['appt_type']);
+			new_appt = Appointment(form_data['user_id'], (int)auth.username, timestamp, form_data['appt_type']);
 			db.session.add(new_appt);
 			db.session.commit();
 			res['msg'] = 'success'
@@ -66,9 +67,10 @@ def checkin_out(request, checkin = True):
 		patient = Patient.query.filter(Patient.id == form_data['user_id']).first();
 		if patient is None:
 			abort(422, "La identificacion del paciente es incorrecto");
-		auth = request.authorization
-		if patient.manager_id != int(auth.username):
-			abort(422, "La identificacion del gerente es incorrecto");
+
+		if verify_manager_access(patient, request.authorization) == False:
+			abort(401, "La identificacion del gerente es incorrecto");
+
 		try:
 			import datetime
 			timestamp = datetime.datetime.utcfromtimestamp(float(form_data['date']))
@@ -174,13 +176,13 @@ def add_patient(request):
 				message = "Gracias para unir Speranza Health"
 
 				r = send_message(message, patient.contact_number)
-				print r
+#				print r
 
-#				print form_data['phone_number']
+				#add patient to organization
+				patient.organizations.append(manager.org_id);	 
+
 				db.session.add(patient);
-				print 'patient contact number post pre commit', patient.contact_number
 				db.session.commit();
-				print 'patient contact number post post commit', patient.contact_number
 				res['msg'] = 'success'
 				res['patient_id'] = patient.id
 				res['patient_contact_number'] = patient.contact_number
@@ -253,8 +255,12 @@ def get_user_appts(request):
 		today = datetime.date.today()
 		tomorrow = datetime.date.today() + datetime.timedelta(days=1)
 		pts = Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id);
-		appts = Appointment.query.filter(Appointment.user_id.in_(Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id))).filter(Appointment.date >= today).filter(Appointment.date < tomorrow).join(Patient, (Patient.id == Appointment.user_id)).with_entities(Patient.firstname, Patient.lastname, Appointment.date, Appointment.appt_type).all()
+
+		#TODO: broken
+		#appts = Appointment.query.filter(Appointment.user_id.in_(Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id))).filter(Appointment.date >= today).filter(Appointment.date < tomorrow).join(Patient, (Patient.id == Appointment.user_id)).with_entities(Patient.firstname, Patient.lastname, Appointment.date, Appointment.appt_type).all()
 		
+		appts = Appointment.query.filter(Appointment.manager_id == int(auth.username)).filter(Appointment.date >= today).filter(Appointment.date < tomorrow).join(Patient, (Patient.id == Appointment.user_id)).with_entities(Patient.firstname, Patient.lastname, Appointment.date, Appointment.appt_type).all()
+
 		ser_appts = []	
 		for appt in appts:
 			ser_appt = {'firstname':appt.firstname, 'lastname':appt.lastname, 'date':appt.date, 'appt_type':appt.appt_type}
@@ -279,9 +285,9 @@ def edit_patient(request):
 			user = Patient.query.filter(Patient.id == form_data['user_id']).first();
 			if user is None:
 				abort(422,  "Invalid patient id")
-			if user.manager_id != int(auth.username):
+
+			if verify_manager_access(user, auth) == False:
 				abort(422,  "Invalid manager")
-				return res;
 			if 'phone_number' in form_data:
 				if form_data['phone_number'].isdigit() == False or (len(form_data['phone_number']) == 0):
 					abort(422, 'Please enter a valid phone number')
@@ -424,7 +430,7 @@ def delete_patient(request):
 	user = Patient.query.filter(Patient.id == form_data['user_id'])
 	if user.first() is None:
 		abort(422, "La identificacion es incorrecto")
-	if user.first().manager_id != int(auth.username):
+	if verify_manager_access(patient, auth) == False:
 		abort(422, "La identificacion del gerente es incorrecto") 
 	try:
 		user.delete();
