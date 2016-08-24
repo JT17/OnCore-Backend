@@ -14,6 +14,11 @@ manager_organization_table = db.Table('manager_organization_table',
 					db.Column('manager_id', db.Integer, db.ForeignKey('managers.id'), nullable=False),
 					db.Column('org_id', db.Integer, db.ForeignKey('organizations.id'), nullable=False),
 					db.PrimaryKeyConstraint('manager_id', 'org_id'))
+admin_table = db.Table('admin_table',
+		db.Column('manager_id', db.Integer, db.ForeignKey('managers.id'), nullable=False),
+		db.Column('org_id', db.Integer, db.ForeignKey('organizations.id'), nullable=False),
+		db.PrimaryKeyConstraint('manager_id', 'org_id'))
+
 class Appointment(db.Model):
 	__tablename__ = 'appointments'
 	id = Column(Integer, primary_key=True)
@@ -54,15 +59,20 @@ class Manager(db.Model):
 	email = db.Column(String(250), nullable=False);
 	password = db.Column(String(128))
 	org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'))
-	def __init__(self, firstname, lastname, phone_number, contact_number,
-			address_id, password):
+	def __init__(self, firstname, lastname, phone_number, 
+			 email, password):
 		self.firstname = firstname;
 		self.lastname = lastname;
 		self.phone_number = phone_number;
 		self.email = email;
 		self.password = pwd_context.encrypt(password) 
-		self.org_id = 0;
-	
+		self.org_id = -1;	
+	def set_org(self, org_id):
+		org = Organization.query.filter(Organization.id == org_id).first();
+		if(self.org_id != -1 or org is None):
+			return None;
+		self.org_id = org_id;
+		return self;
 	def verify_password(self, password):
 		return pwd_context.verify(password, self.password);
 
@@ -93,7 +103,7 @@ class Patient(db.Model):
 	address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True);
 	dob = Column(String(250), nullable=False)
 	gov_id = Column(Integer, nullable = False)
-	organizations = db.relationship('organizations', secondary=patient_organization_table, backref='patients');
+	organizations = db.relationship('Organization', secondary=patient_organization_table, backref='patients');
 
 	def __init__(self, firstname, lastname, phone_number, contact_number,
 			address_id, dob, gov_id):
@@ -105,8 +115,21 @@ class Patient(db.Model):
 		self.dob = dob
 		self.gov_id = gov_id
 	
+	def add_to_org(self, org_id):
+		for org in self.organizations:
+			if org.id == org_id:
+				return None
+		org_to_add = Organization.query.filter(Organization.id == org_id).first()
+		if org_to_add is None:
+			return None
+		self.organizations.append(org_to_add)
+		return self
+
 	def grant_access(self, org_id):
-		return self.organizations.filter(organizations.id == org_id)
+		for org in self.organizations:
+			if org.id == org_id:
+				return True
+		return False
 class Address(db.Model):
 	__tablename__ = 'addresses'
 
@@ -133,11 +156,22 @@ class Organization(db.Model):
 	id = Column(Integer, primary_key=True);
 	org_name = Column(String(250), nullable=False);
 	org_pwd= Column(String(250), nullable=True);
-	admins = db.relationship('Admin')
 	org_email = Column(String(250), nullable=True);
+	admins = db.relationship('Manager', secondary=admin_table)
 
 	def __init__(self, org_name, org_pwd, org_email=None):
 		self.org_name = org_name;
 		self.org_pwd = org_pwd;
 		if(org_email is not None):
 			self.org_email = org_email;
+	
+	def add_admin(self, mgr_id):
+		for admin in self.admins:
+			if admin.id == mgr_id:
+				return None
+
+		mgr = Manager.query.filter(Manager.id == mgr_id).first()
+		if mgr is None:
+			return None;
+		self.admins.append(mgr)
+		return self

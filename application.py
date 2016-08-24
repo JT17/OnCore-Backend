@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, make_response
 from flask.ext.httpauth import HTTPBasicAuth
-from application import db
+from application import db, application
 from application.models import *
 from application.forms import *
 from flask import Flask, request, redirect, jsonify, g
@@ -11,7 +11,7 @@ import speranza_api
 from werkzeug.exceptions import default_exceptions, abort
 from error_handling import handle_error 
 # Elastic Beanstalk initalization
-application = Flask(__name__)
+#application = Flask(__name__)
 application.debug=True
 # change this to your own value
 # app.secret_key = 'cC1YCIWOj9GgWspgNEo2'   
