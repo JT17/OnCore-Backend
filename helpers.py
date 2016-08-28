@@ -5,3 +5,10 @@ def get_form_data(request):
 	if request.get_json() == None:
 		return request.form
 	return request.get_json()
+
+def verify_form_data(args, form_data):
+	for arg in args:
+		if arg not in form_data:
+			return False;
+
+	return True;

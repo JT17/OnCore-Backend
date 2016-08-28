@@ -8,6 +8,7 @@ from helpers import get_form_data
 
 GUAT_COUNTRY_CODE = '502'
 USA_COUNTRY_CODE = '1'
+DEBUG = False;
 
 # TODO make this more robust
 def sanitize_phone_number(number):
@@ -21,13 +22,17 @@ def sanitize_phone_number(number):
 #	print 'post-sanitized', new_number
 	return int(new_number)
 def verify_manager_access(patient, auth):
-	manager = Manager.query.filter(Manager.id == int(auth.username))
+	manager = Manager.query.filter(Manager.id == int(auth.username)).first()
 	return patient.grant_access(manager.org_id)
 def add_appt(request):
 	res = {'msg':'Sorry something went wrong'}
-	form_data = get_form_data(request)
-
-	if 'user_id' in form_data and 'date' in form_data and 'appt_type' in form_data:
+	if (DEBUG == False):
+		form_data = get_form_data(request)
+	else:
+		form_data = request
+	
+	requirements = ['user_id', 'date', 'appt_type']
+	if verify_form_data(requirements, form_data):
 		#error check that manager making appt is the patient's manager
 		patient = Patient.query.filter(Patient.id == form_data['user_id']).first();
 		if patient is None:
@@ -46,7 +51,7 @@ def add_appt(request):
 			if exists.first() is not None:
 				abort(422, "Ya existe una cita para este fecha");
 
-			new_appt = Appointment(form_data['user_id'], (int)auth.username, timestamp, form_data['appt_type']);
+			new_appt = Appointment(form_data['user_id'], int(auth.username), timestamp, form_data['appt_type']);
 			db.session.add(new_appt);
 			db.session.commit();
 			res['msg'] = 'success'

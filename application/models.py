@@ -66,11 +66,10 @@ class Manager(db.Model):
 		self.phone_number = phone_number;
 		self.email = email;
 		self.password = pwd_context.encrypt(password) 
-		self.org_id = 0;
-	
+		self.org_id = -1;	
 	def set_org(self, org_id):
 		org = Organization.query.filter(Organization.id == org_id).first();
-		if(self.org_id != 0 or org is None):
+		if(self.org_id != -1 or org is None):
 			return None;
 		self.org_id = org_id;
 		return self;

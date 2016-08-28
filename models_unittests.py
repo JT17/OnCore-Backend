@@ -1,3 +1,6 @@
+'''Tests all of the models and join tables (manager_organization_table and
+admin_table are tested together in one test)'''
+
 import os
 import unittest
 import datetime
@@ -69,7 +72,7 @@ class TestModels(unittest.TestCase):
 
 	def test_manager(self):
 		manager = Manager(firstname = "test", lastname = "user", phone_number = 12345, password= "pass", email="test_email@email.com")
-		assert(manager.org_id == 0)
+		assert(manager.org_id == -1)
 		db.session.add(manager)
 		db.session.commit()
 		fetch_mgr = Manager.query.filter(Manager.firstname == "test").filter(Manager.lastname == "user").first()
@@ -110,21 +113,34 @@ class TestModels(unittest.TestCase):
 		db.session.commit()
 		p1= Patient(firstname="test", lastname="pt", phone_number=12345,
 				contact_number=54321, address_id=pt_address.id, dob="01/01/2000", gov_id=1)
+		p2= Patient(firstname="test1", lastname="pt", phone_number=12345,
+				contact_number=54321, address_id=pt_address.id, dob="01/01/2000", gov_id=2)
 		new_org = Organization(org_name="test", org_pwd="pwd", org_email="test_email")
+		second_org = Organization(org_name="test2", org_pwd="pwd", org_email="test_email")
 		db.session.add(p1)
+		db.session.add(p2)
 		db.session.add(new_org)
+		db.session.add(second_org)
 		db.session.commit()
 
 		p1.add_to_org(new_org.id)
 		assert(len(p1.organizations) == 1)
+
+		p1.add_to_org(second_org.id)
+		assert(len(p1.organizations) == 2)
+
 		assert(len(new_org.patients) == 1)
+		assert(len(second_org.patients) == 1)
+
+		p2.add_to_org(new_org.id)
+		assert(len(new_org.patients) == 2)
 	def test_org_manager(self):
 		mgr = Manager("test", "mgr", 12345, "abc@abc.com", "pwd");
 		org = Organization("test", "org");
 		db.session.add(org);
 		db.session.commit();	
 
-		mgr.set_org(org.id)
+		assert(mgr.set_org(org.id) is not None)
 		db.session.add(mgr)
 		db.session.commit();
 
@@ -138,8 +154,6 @@ class TestModels(unittest.TestCase):
 
 		assert(mgr.org_id == org.id)
 		assert(mgr.set_org(10) is None)
-
-
 
 if __name__ == '__main__':
 	unittest.main()
