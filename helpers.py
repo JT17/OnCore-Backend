@@ -6,9 +6,14 @@ def get_form_data(request):
 		return request.form
 	return request.get_json()
 
-def verify_form_data(args, form_data):
-	for arg in args:
-		if arg not in form_data:
-			return False;
-
-	return True;
+# TODO make this more robust
+def sanitize_phone_number(number):
+#	print 'pre-sanitized', number
+#	print len(number)
+	new_number = ''
+	if len(number) == 8:
+		new_number = GUAT_COUNTRY_CODE + str(number)
+	else:
+		new_number = str(number)
+#	print 'post-sanitized', new_number
+	return int(new_number)

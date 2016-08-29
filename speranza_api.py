@@ -4,26 +4,14 @@ import sqlalchemy.exc
 from dateutil import parser
 import requests
 from messenger import send_message
-from helpers import get_form_data
+from helpers import * 
+from verification import *
+import datetime
 
 GUAT_COUNTRY_CODE = '502'
 USA_COUNTRY_CODE = '1'
 DEBUG = False;
 
-# TODO make this more robust
-def sanitize_phone_number(number):
-#	print 'pre-sanitized', number
-#	print len(number)
-	new_number = ''
-	if len(number) == 8:
-		new_number = GUAT_COUNTRY_CODE + str(number)
-	else:
-		new_number = str(number)
-#	print 'post-sanitized', new_number
-	return int(new_number)
-def verify_manager_access(patient, auth):
-	manager = Manager.query.filter(Manager.id == int(auth.username)).first()
-	return patient.grant_access(manager.org_id)
 def add_appt(request):
 	res = {'msg':'Sorry something went wrong'}
 	if (DEBUG == False):
@@ -34,24 +22,22 @@ def add_appt(request):
 	requirements = ['user_id', 'date', 'appt_type']
 	if verify_form_data(requirements, form_data):
 		#error check that manager making appt is the patient's manager
-		patient = Patient.query.filter(Patient.id == form_data['user_id']).first();
-		if patient is None:
+		if verify_patient_exists(form_data['user_id']) is False:
 			abort(422, "La identificacion del paciente es incorrecto");
 		if len(form_data['appt_type']) == 0:
 			abort(422, "El appt_type es incorrecto");
 
-		if verify_manager_access(patient, request.authorization) == False:
+		if verify_manager_access(form_data['user_id'], request.authorization) == False:
 			abort(401, "La identificacion del gerente es incorrecto"); 
 		try:
 			#right now storing everything as a datetime, but we need to be consistent about this
-			import datetime
 			timestamp = datetime.datetime.utcfromtimestamp(float(form_data['date']));
-			exists = Appointment.query.filter(Appointment.user_id == form_data['user_id']).filter(Appointment.date == timestamp);
+			exists = Appointment.query.filter(Appointment.patient_id == form_data['user_id']).filter(Appointment.date == timestamp);
 
 			if exists.first() is not None:
 				abort(422, "Ya existe una cita para este fecha");
 
-			new_appt = Appointment(form_data['user_id'], int(auth.username), timestamp, form_data['appt_type']);
+			new_appt = Appointment(form_data['user_id'], int(request.authorization.username), timestamp, form_data['appt_type']);
 			db.session.add(new_appt);
 			db.session.commit();
 			res['msg'] = 'success'
@@ -66,20 +52,22 @@ def add_appt(request):
 
 def checkin_out(request, checkin = True):
 	res = {'msg':'Sorry something went wrong'}
-	form_data = get_form_data(request)
+	if DEBUG == False:
+		form_data = get_form_data(request)
+	else:
+		form_data = request
+	requirements = ['user_id', 'date']
+	if verify_form_data(requirements, form_data):
 
-	if 'user_id' in form_data and 'date' in form_data:
-		patient = Patient.query.filter(Patient.id == form_data['user_id']).first();
-		if patient is None:
+		if verify_patient_exists(form_data['user_id']) == False:
 			abort(422, "La identificacion del paciente es incorrecto");
 
-		if verify_manager_access(patient, request.authorization) == False:
+		if verify_manager_access(form_data['user_id'], request.authorization) == False:
 			abort(401, "La identificacion del gerente es incorrecto");
 
 		try:
-			import datetime
 			timestamp = datetime.datetime.utcfromtimestamp(float(form_data['date']))
-			appt = Appointment.query.filter(Appointment.user_id == form_data['user_id']).filter(Appointment.date == timestamp).first()
+			appt = Appointment.query.filter(Appointment.patient_id == form_data['user_id']).filter(Appointment.date == timestamp).first()
 			if appt is None:
 				abort(422, "La fecha es incorrecto, intenta otra vez por favor");
 			if checkin == True:
@@ -98,28 +86,6 @@ def checkin_out(request, checkin = True):
 	else:
 		abort(422, "Necesita mas informacion, intenta otra vez por favor")
 		
-#returns False if invalid request, True otherwise
-def verify_new_user(request):
-	form_data = get_form_data(request)
-
-	if 'firstname' not in form_data or 'lastname' not in form_data or 'phone_number' not in form_data \
-		or 'contact_number' not in form_data: 
-		if 'firstname' not in form_data:
-			abort(422, "missing firstname")
-		if 'lastname' not in form_data:
-			abort(422,"missing lastname")
-		if 'phone_number' not in form_data:
-			abort(422, "missing phone_number")
-		if 'contact_number' not in form_data:
-			abort(422, "missing contact_number")
-	if len(form_data['firstname']) == 0 or len(form_data['lastname']) == 0:
-		abort(422, "names are too short")
-	pn = form_data['phone_number'];
-	cn = form_data['contact_number'];
-#	if pn.isdigit() == False or cn.isdigit() == False or (len(pn) == 0) or (len(cn) == 0):
-#		print "phone number isn't digit"
-#		return False;
-
 #returns Address if valid, otherwise raises an error
 def add_address(request):
 	form_data = get_form_data(request)
@@ -239,15 +205,6 @@ def get_patients(request):
 
 def get_appts(request):
 	return Appointment.query.all();
-
-def verify_password(username, password_or_token):
-	mgr = Manager.verify_auth_token(password_or_token)
-	if not mgr:
-		mgr = Manager.query.filter(Manager.id == username).first();
-		if not mgr or not mgr.verify_password(password_or_token):
-			return False;
-	g.manager= mgr 
-	return True;
 
 def get_user_appts(request):
 	import json

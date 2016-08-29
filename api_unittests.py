@@ -1,21 +1,26 @@
 import os
 import unittest
+import time
 import datetime
-
 from application import db, application
 from application.models import *
 
 import speranza_api
 import requests
 from json import JSONEncoder
-
+from werkzeug.exceptions import *
 application = Flask(__name__)
 
 #use this class whenever requests have to be passed into an argument
 class Placeholder(object):
 	pass;
+
+class MyDict(dict):
+	pass;
+
 class TestApi(unittest.TestCase):
 	def setUp(self):
+		speranza_api.DEBUG = True;
 		application.config['TESTING'] = True
 		application.config['WTF_CSRF_ENABLED'] = False
 		application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' 
@@ -58,20 +63,86 @@ class TestApi(unittest.TestCase):
 	def test_verify_manager_access(self):
 		auth = Placeholder() 
 		auth.username = self.mgr1.id
-		assert(speranza_api.verify_manager_access(self.pt1, auth) == False)
+		assert(speranza_api.verify_manager_access(self.pt1.id, auth) == False)
 
 		auth.username = self.mgr.id
-		assert(speranza_api.verify_manager_access(self.pt1, auth) == False)
+		assert(speranza_api.verify_manager_access(self.pt1.id, auth) == False)
 
 		self.pt1.add_to_org(self.mgr.org_id)
-		assert(speranza_api.verify_manager_access(self.pt1, auth) == True)
+		assert(speranza_api.verify_manager_access(self.pt1.id, auth) == True)
 
 	def test_add_appt(self):
 		auth = Placeholder()
-		auth.username = self.mgr1.id
-		speranza_api.DEBUG = True;
-		request = {'user_id':1, 'appt_type':"blah", 'date':1, 'authorization':auth}
-		speranza_api.add_appt(request)
+		auth.username = self.mgr.id
+		today = time.time(); 
+		self.pt1.add_to_org(self.mgr.org_id)
+		request = MyDict();
+		request['user_id'] = self.pt1.id;
+		request['appt_type'] = 'blah'
+		request['date'] = today;
+		request.authorization = auth
 
+		speranza_api.add_appt(request)
+		appts = Appointment.query.all()
+		assert(len(appts) == 1)
+		assert(appts[0].patient_id == self.pt1.id)
+		assert(appts[0].appt_type == 'blah')
+		
+		failed = False;
+		try:
+			speranza_api.add_appt(request)
+		except:
+			failed = True;
+		assert(failed)
+		assert(len(Appointment.query.all()) == 1)
+
+		failed = False
+		try:
+			auth.username = self.mgr1.id
+			request.authorization = auth;
+			speranza_api.add_appt(request)
+		except Unauthorized as e:
+			failed = True
+		assert(failed)
+		assert(len(Appointment.query.all()) == 1)
+
+	def test_checkin_out(self):
+		auth = Placeholder()
+		auth.username = self.mgr.id
+		today = time.time()
+		self.pt1.add_to_org(self.mgr.org_id)
+		today_ts = datetime.datetime.utcfromtimestamp(float(today))
+		appt = Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
+		db.session.add(appt)
+		db.session.commit()
+		
+		request = MyDict()
+		request['user_id'] = self.pt1.id
+		request['date'] = today
+		request.authorization = auth
+
+		speranza_api.checkin_out(request)
+		appts = Appointment.query.all()
+		assert(appts[0].checkin == True)
+
+		failed = False
+		try:
+			speranza_api.checkin_out(request)
+		except Exception as e:
+			assert(type(e) == UnprocessableEntity)
+			failed = True
+		assert(failed)
+		assert(appts[0].checkout == False)
+
+		speranza_api.checkin_out(request, checkin=False)
+		appts = Appointment.query.all()
+		assert(appts[0].checkout == True)
+		failed = False
+		try:
+			speranza_api.checkin_out(request, checkin=False)
+		except Exception as e:
+			assert(type(e) == UnprocessableEntity)
+			failed = True
+		assert(failed)
 if __name__ == '__main__':
 	unittest.main()
