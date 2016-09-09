@@ -6,7 +6,9 @@ src_phone = '+18057424820'
 
 p = plivo.RestAPI(auth_id, auth_token)
 
-def send_message(message, phone_number):
+def send_message(message, phone_number, DEBUG):
+	if DEBUG == True:
+		return;
 	params = {
 	    'src': src_phone, # Sender's phone number with country code
 	    'dst' : phone_number, # Receiver's phone Number with country code
