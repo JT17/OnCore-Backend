@@ -75,6 +75,10 @@ class TestApi(unittest.TestCase):
 
 		self.pt1.add_to_org(self.mgr.org_id)
 		assert(speranza_api.verify_manager_access(self.pt1.id, auth) == True)
+		self.mgr1.org_id = self.org1.id
+		assert(self.mgr1.org_id == self.org1.id)
+		auth.username = self.mgr1.id
+		assert(speranza_api.verify_manager_access(self.pt1.id, auth) == True)
 
 	def test_add_appt(self):
 		auth = Placeholder()
