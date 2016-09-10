@@ -7,6 +7,10 @@ from messenger import send_message
 from helpers import * 
 from verification import *
 import datetime
+from mixpanel import Mixpanel
+
+MIXPANEL_TOKEN = '9356a2c2986506360e6ba9929a516f16'
+mp = Mixpanel(MIXPANEL_TOKEN)
 
 DEBUG = False;
 
@@ -25,7 +29,7 @@ def add_appt(request):
 			abort(401, "La identificacion del gerente es incorrecto"); 
 		try:
 			#right now storing everything as a datetime, but we need to be consistent about this
-			timestamp = datetime.datetime.utcfromtimestamp(float(form_data['date']));
+			timestamp = datetime.datetime.utcfromtimestamp(int(form_data['date']));
 			exists = Appointment.query.filter(Appointment.patient_id == form_data['user_id']).filter(Appointment.date == timestamp);
 
 			if exists.first() is not None:
@@ -35,6 +39,8 @@ def add_appt(request):
 			db.session.add(new_appt);
 			db.session.commit();
 			res['msg'] = 'success'
+			if DEBUG == False:
+				mp.track(form_data['user_id'], "New appointment added", properties={'date':timestamp, 'appt_type':form_data['appt_type']})
 		except sqlalchemy.exc.DatabaseError, e:
 			db.session.rollback()
 			abort(500, str(e))
@@ -71,6 +77,12 @@ def checkin_out(request, checkin = True):
 				appt.checkout = True;
 			db.session.commit();
 			res['msg'] = 'success'
+			if DEBUG == False:
+				if checkin == True:
+					mp.track(form_data['user_id'], "Patient checked in", properties={'date':timestamp})
+				else:
+					mp.track(form_data['user_id'], "Patient checked out", properties={'date':timestamp})
+
 			return res;
 		except sqlalchemy.exc.DatabaseError, e:
 			abort(500, str(e))
@@ -142,9 +154,9 @@ def add_patient(request):
 			try:
 				db.session.add(patient);
 				db.session.commit();
+				if DEBUG == False:
+					mp.track(auth.username, "Patient added", properties={'firstname':form_data['firstname'], 'lastname':form_data['lastname'], 'dob':form_data['dob'], 'gov_id':form_data['gov_id']})
 			except Exception, e:
-				db.session.flush();
-				print e.args
 				abort(500, str(e))
 
 			res['msg'] = 'success'
@@ -169,6 +181,8 @@ def add_manager(request):
 	try:
 		db.session.add(manager);
 		db.session.commit();
+		if DEBUG == False:
+			mp.track(manager.id, "Manager added", properties={'firstname':form_data['firstname'], 'lastname':form_data['lastname']})
 	except ValueError as err:
 		db.session.flush();
 		abort(500, str(err.args))

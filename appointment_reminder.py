@@ -3,7 +3,7 @@ from flask import Flask, request, redirect, jsonify, g
 import datetime
 import requests
 from messenger import send_message
-
+from speranza_api import DEBUG
 # FRONTLINESMS_API_KEY = "309fefe6-e619-4766-a4a2-53f0891fde23"
 # FRONTLINESMS_WEBHOOK = "https://cloud.frontlinesms.com/api/1/webhook"
 # -*- coding: utf-8 -*-
@@ -12,21 +12,22 @@ def send_appointment_reminders_no_authentication():
 	import json
 	try:
 		all_appts = Appointment.query.all()
+		print len(all_appts)
 		for appt in all_appts:
 			if appt.checkin or appt.checkout:
 				continue
-			# print appt.user_id
-			# print appt.date
-			# print datetime.datetime.now() # TODO maybe should be utcnow?
+			print appt.patient_id
+			print appt.date
+			print datetime.datetime.now() # TODO maybe should be utcnow?
 			time_until_appointment = appt.date - datetime.datetime.now()
 			print time_until_appointment
 		 	if time_until_appointment <= datetime.timedelta(days=1) and time_until_appointment >= datetime.timedelta(days=0):
-		 		patient = Patient.query.filter(Patient.id == appt.user_id).first()
+		 		patient = Patient.query.filter(Patient.id == appt.patient_id).first()
 		 		message = "Hola {0}, \n no olvide que tiene una cita a las {1}".format(patient.firstname, str(appt.date))
 		 		# if time_until_appointment <= datetime.timedelta(days=0):
 		 		# 	message = "LATE APPONTMENT: " + message
 		 		print "Message: {0} \nNumber: {1} \nDate: {2}".format(message, patient.phone_number, appt.date)
-				send_message(message, patient.phone_number);
+				send_message(message, patient.phone_number, DEBUG);
 	except ValueError:
 		return str("Couldn't fetch your appointments something went wrong :(");
 
@@ -148,12 +149,13 @@ def send_merida_reminders():
 		return str(e)
 
 #create_fake_appointments()
-all_pts = Patient.query.all();
-print "total patients: ", len(all_pts)
-send_appointment_reminders_no_authentication()
-send_hemeonc_reminders()
-send_diabetes_reminders()
-send_merida_reminders()
+if __name__ == '__main__':
+	all_pts = Patient.query.all();
+	print "total patients: ", len(all_pts)
+	send_appointment_reminders_no_authentication()
+	send_hemeonc_reminders()
+	send_diabetes_reminders()
+	send_merida_reminders()
 
 # send_message('test3 - Speranza Health', '0050250005833')
 # dr valvert's 00 502 5050 32 32

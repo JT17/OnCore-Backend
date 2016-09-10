@@ -84,6 +84,7 @@ class TestApi(unittest.TestCase):
 		auth = Placeholder()
 		auth.username = self.mgr.id
 		today = time.time(); 
+		today_ts = datetime.datetime.utcfromtimestamp(int(today))
 		self.pt1.add_to_org(self.mgr.org_id)
 		request = MyDict();
 		request['user_id'] = self.pt1.id;
@@ -96,7 +97,8 @@ class TestApi(unittest.TestCase):
 		assert(len(appts) == 1)
 		assert(appts[0].patient_id == self.pt1.id)
 		assert(appts[0].appt_type == 'blah')
-		
+		assert(appts[0].date == today_ts)
+
 		failed = False;
 		try:
 			speranza_api.add_appt(request)
