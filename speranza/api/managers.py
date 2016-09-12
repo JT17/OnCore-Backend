@@ -15,33 +15,29 @@ def get_all_managers():
     return Manager.query.all()
 
 
-def add_manager(request):
-    res = {'msg': 'Something has gone wrong'}
-    form_data = get_form_data(request)
+def add_manager(request, DEBUG=False):
+	res = {'msg':'Something has gone wrong'}
+	form_data = get_form_data(request, DEBUG)
 
-    verify_new_user(request)
-    try:
-        addr = add_address(request)
-        if addr is None:
-            abort(500, "Hay una problema con el server, por favor intenta otra vez")
-    except ValueError as err:
-        abort(500, str(err.args))
+	requirements = ['firstname', 'lastname', 'password', 'phone_number', 'email']
+	if verify_form_data(requirements, form_data) == False:
+		abort(422, "Necesita mas informaction, intenta otra vez por favor")
+	if verify_new_user(form_data) == False:
+		abort(422, "Necesita mas informaction, intenta otra vez por favor")
 
-    if 'password' in form_data:
-        phone_number = sanitize_phone_number(form_data['phone_number'])
-        contact_number = sanitize_phone_number(form_data['contact_number'])
-        manager = Manager(form_data['firstname'], form_data['lastname'],
-                          phone_number, contact_number, form_data['password'])
-        try:
-            db.session.add(manager)
-            db.session.commit()
-        except ValueError as err:
-            db.session.flush()
-            abort(500, str(err.args))
+	phone_number = sanitize_phone_number(form_data['phone_number'])
+	manager = Manager(form_data['firstname'], form_data['lastname'],
+		       	phone_number, form_data['email'], form_data['password'])
+	try:
+		db.session.add(manager)
+		db.session.commit()
+		if DEBUG == False:
+			mp.track(manager.id, "Manager added", properties={'firstname':form_data['firstname'], 'lastname':form_data['lastname']})
+	except ValueError as err:
+		db.session.flush()
+		abort(500, str(err.args))
 
-        res['msg'] = 'success'
-        res['mgr_id'] = manager.id
-        return res
-    else:
-        # TODO check spanish for password
-        abort(422, "Necesita una contrasena")
+	res['msg'] = 'success'
+	res['mgr_id'] = manager.id
+	return res
+

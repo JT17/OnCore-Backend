@@ -50,34 +50,31 @@ def sanitize_phone_number(number):
 
 
 # returns Address if valid, otherwise raises an error
-def add_address(request):
-    form_data = get_form_data(request)
-
+def add_address(request, DEBUG=False):
+    form_data = get_form_data(request, DEBUG)
     user_addr = Address()
-    if 'street_num' in form_data:
+    if form_data.has_key('street_num'):
         user_addr.street_num = form_data['street_num']
-    if 'street_name' in form_data:
+    if form_data.has_key('street_name'):
         user_addr.street_name = form_data['street_name']
-    if 'street_type' in form_data:
+    if form_data.has_key('street_type'):
         user_addr.street_type = form_data['street_type']
-    if 'city_name' in form_data:
+    if form_data.has_key('city_name'):
         user_addr.city_name = form_data['city_name']
-    if 'zipcode' in form_data:
+    if form_data.has_key('zipcode'):
         user_addr.zipcode = form_data['zipcode']
-    if 'district' in form_data:
+    if form_data.has_key('district'):
         user_addr.district = form_data['district']
 
     try:
-        print 'attempting to add address'
         db.session.add(user_addr)
-        db.session.flush()
+        db.session.commit()
     except Exception, e:
         print 'exception adding address ', str(e)
         db.session.rollback()
-        # db.session.flush()
+        # db.session.flush();
         raise ValueError(str(e))
     return user_addr
-
 
 def get_form_data(request):
     """Returns the request's json"""
