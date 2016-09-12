@@ -1,25 +1,22 @@
-"""Tests for our API implementation"""
-import json
+import os
 import unittest
+import time
+import datetime
+from application import db, application
+from application.models import *
 
-from speranza import db, application
+import speranza_api
+import requests
+from json import JSONEncoder
+from werkzeug.exceptions import *
+application = Flask(__name__)
 
-from speranza.mod_addresses.models import Address
-from speranza.mod_managers.models import Manager
-from speranza.mod_organizations.models import Organization
-from speranza.mod_patients.models import Patient
-
-from speranza.api.managers import verify_manager_access
-from speranza.api.appointments import add_appt
-
-
+#use this class whenever requests have to be passed into an argument
 class Placeholder(object):
 	pass;
 
-
 class MyDict(dict):
 	pass;
-
 
 class TestApi(unittest.TestCase):
 	def setUp(self):
@@ -317,9 +314,6 @@ class TestApi(unittest.TestCase):
 		pt = Patient.query.filter(Patient.id == self.pt1.id).first()
 		assert (pt.dob == '07/07/07')
 
-	def test_find_patient(self):
-		pass;
-
 	def test_edit_patient_address(self):
 		auth = Placeholder()
 		auth.username = self.mgr.id
@@ -480,7 +474,5 @@ class TestApi(unittest.TestCase):
 			assert (type(e) == UnprocessableEntity), e
 			failed = True
 		assert (failed)
-
-
 if __name__ == '__main__':
 	unittest.main()
