@@ -15,7 +15,8 @@ def sanitize_phone_number(number):
 
 def get_form_data(request, debug=False):
     """Returns the request's json"""
-    print debug
+    if debug:
+        return request
 
     if request.get_json() is None:
         return request.form

@@ -7,12 +7,11 @@ application = Flask(__name__)
 
 # Configurations
 application.config.from_object('config')
-application.debug = True
+application.debug = False
 application.secret_key = '3treelandscaping'
 
 # Define the database object which is imported by modules and controllers
 db = SQLAlchemy(application)
-db.create_all()
 
 # TODO using simple HTTP auth at the moment. Should use HTTPS for everything.
 auth = HTTPBasicAuth()

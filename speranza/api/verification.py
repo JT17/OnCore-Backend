@@ -24,6 +24,7 @@ def verify_patient_exists(patient_id):
 def verify_new_user(form_data):
     if len(form_data['firstname']) == 0 or len(form_data['lastname']) == 0:
         abort(422, "names are too short")
+    return True
     # if pn.isdigit() == False or cn.isdigit() == False or (len(pn) == 0) or (len(cn) == 0):
     #   print "phone number isn't digit"
     #   return False;

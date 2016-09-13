@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.exceptions import *
 import unittest
 import time
@@ -14,6 +13,7 @@ import speranza.api.common
 import speranza.api.managers
 import speranza.api.patients
 import speranza.api.verification
+from speranza.application import db
 
 
 # use this class whenever requests have to be passed into an argument
@@ -22,20 +22,22 @@ class Placeholder(object):
 
 
 class MyDict(dict):
-    pass
+
+    def get_json(self):
+        print self
+        return self
 
 
 class TestApi(unittest.TestCase):
     def setUp(self):
         self.application = Flask(__name__)
-        self.db = SQLAlchemy(self.application)
 
         self.application.config['TESTING'] = True
         self.application.config['WTF_CSRF_ENABLED'] = False
         self.application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
         self.application = self.application.test_client()
 
-        self.db.create_all()
+        db.create_all()
 
         self.addr1 = models.Address(city_name="Palo Alto")
         self.addr2 = models.Address(street_number=1234, street_name="test street", street_type="st",
@@ -44,24 +46,25 @@ class TestApi(unittest.TestCase):
         self.addr3 = models.Address(street_number=1234, street_name="test street", street_type="st",
                                     city_name="Palo Alto",
                                     zipcode=98505, district="CA")
-        self.db.session.add(self.addr1)
-        self.db.session.add(self.addr2)
-        self.db.session.add(self.addr3)
-        self.db.session.commit()
+
+        db.session.add(self.addr1)
+        db.session.add(self.addr2)
+        db.session.add(self.addr3)
+        db.session.commit()
 
         self.org1 = models.Organization(org_name="test_org1", org_pwd="pwd")
         self.org2 = models.Organization(org_name="test_org2", org_pwd="pwd")
-        self.db.session.add(self.org1)
-        self.db.session.add(self.org2)
-        self.db.session.commit()
+        db.session.add(self.org1)
+        db.session.add(self.org2)
+        db.session.commit()
 
         self.mgr = models.Manager("test", "mgr", 12345, "abc@abc.com", "pwd")
         self.mgr1 = models.Manager("test", "mgr1", 12345, "blah@abc.com", "pwd")
         self.mgr.set_org(self.org1.id)
         self.mgr1.set_org(self.org2.id)
-        self.db.session.add(self.mgr)
-        self.db.session.add(self.mgr1)
-        self.db.session.commit()
+        db.session.add(self.mgr)
+        db.session.add(self.mgr1)
+        db.session.commit()
 
         self.pt1 = models.Patient(firstname="test", lastname="pt1", phone_number=12345,
                                   contact_number=54321, address_id=self.addr1.id, dob="01/01/2000", gov_id=1)
@@ -70,15 +73,25 @@ class TestApi(unittest.TestCase):
 
         self.pt3 = models.Patient(firstname="test", lastname="pt3", phone_number=33333,
                                   contact_number=54321, address_id=self.addr3.id, dob="03/03/3003", gov_id=3)
-        self.db.session.add(self.pt1)
-        self.db.session.add(self.pt2)
-        self.db.session.add(self.pt3)
-        self.db.session.commit()
+        db.session.add(self.pt1)
+        db.session.add(self.pt2)
+        db.session.add(self.pt3)
+        db.session.commit()
 
     def tearDown(self):
-        self.db.session.remove()
-        self.db.drop_all()
-        self.application, db, addr1, addr2, addr3, org1, org2, mgr, mgr1, pt1, pt2, pt3 = None
+        db.session.remove()
+        db.drop_all()
+        self.application = None
+        self.addr1 = None
+        self.addr2 = None
+        self.addr3 = None
+        self.org1 = None
+        self.org2 = None
+        self.mgr = None
+        self.mgr1 = None
+        self.pt1 = None
+        self.pt2 = None
+        self.pt3 = None
 
     def test_verify_manager_access(self):
         auth = Placeholder()
@@ -142,8 +155,8 @@ class TestApi(unittest.TestCase):
         today_ts = datetime.datetime.utcfromtimestamp(float(today))
         appt = models.Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
 
-        self.db.session.add(appt)
-        self.db.session.commit()
+        db.session.add(appt)
+        db.session.commit()
 
         request = MyDict()
         request['user_id'] = self.pt1.id
@@ -215,14 +228,13 @@ class TestApi(unittest.TestCase):
             assert (type(e) == UnprocessableEntity), traceback.format_exc()
             failed = True
         assert failed
-        request['firstname'] = ""
+        request['firstname'] = ""  # Zero length string on purpose to throw exception
         request['lastname'] = "Test"
-        request['phone_number'] = '12345678'
-        request['contact_number'] = 87654321
+        request['phone_number'] = "12345678"
+        request['contact_number'] = "87654321"
         request['dob'] = 01 / 01 / 2001
         request['gov_id'] = 42
         request['city_name'] = "City"
-        # check that improper name fails
         failed = False
         try:
             speranza.api.patients.add_patient(request)
@@ -252,7 +264,7 @@ class TestApi(unittest.TestCase):
         request['lastname'] = "Manager"
         request['email'] = "test@mail.com"
         request['password'] = "password"
-        request['phone_number'] = 12345567
+        request['phone_number'] = "12345567"
 
         res = speranza.api.managers.add_manager(request)
         assert (res['msg'] == "success")
@@ -278,15 +290,15 @@ class TestApi(unittest.TestCase):
         request.authorization = auth
 
         appts_res = speranza.api.appointments.get_patient_appts(request)
-        assert (len(appts_res['appts']) == 0)
+        assert len(appts_res['appts']) == 0
 
         appt1 = models.Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
         appt2 = models.Appointment(self.pt2.id, self.mgr.id, today2_ts, "blah")
         appt3 = models.Appointment(self.pt3.id, self.mgr.id, today3_ts, "blah")
-        self.db.session.add(appt1)
-        self.db.session.add(appt2)
-        self.db.session.add(appt3)
-        self.db.session.commit()
+        db.session.add(appt1)
+        db.session.add(appt2)
+        db.session.add(appt3)
+        db.session.commit()
 
         appts_res = speranza.api.appointments.get_patient_appts(request)
         appts = appts_res['appts']
@@ -408,7 +420,7 @@ class TestApi(unittest.TestCase):
         self.pt2.lastname = self.pt1.lastname
         self.pt2.dob = self.pt1.dob
 
-        self.db.session.commit()
+        db.session.commit()
 
         request['firstname'] = self.pt1.firstname
         request['lastname'] = self.pt1.lastname
@@ -440,8 +452,8 @@ class TestApi(unittest.TestCase):
         # new_date = today + 1000
         today_ts = datetime.datetime.utcfromtimestamp(int(today))
         appt = models.Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
-        self.db.session.add(appt)
-        self.db.session.commit()
+        db.session.add(appt)
+        db.session.commit()
         new_date = today + 1
         request['old_date'] = today
         request['user_id'] = self.pt1.id
@@ -470,8 +482,8 @@ class TestApi(unittest.TestCase):
         today = time.time()
         today_ts = datetime.datetime.utcfromtimestamp(int(today))
         appt = models.Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
-        self.db.session.add(appt)
-        self.db.session.commit()
+        db.session.add(appt)
+        db.session.commit()
 
         request['user_id'] = self.pt1.id
         request['date'] = today
@@ -483,14 +495,16 @@ class TestApi(unittest.TestCase):
         auth = Placeholder()
         auth.username = self.mgr.id
 
-        self.pt1.add_to_org(self.mgr.org_id)
+        p = self.pt1.add_to_org(self.mgr.org_id)
+        print p
         request = MyDict()
         request.authorization = auth
+        print request.authorization.username
 
         request['user_id'] = self.pt1.id
         res = speranza.api.patients.delete_patient(request)
-        assert (res['msg'] == 'success')
-        assert (len(models.Patient.query.all()) == 2)
+        assert res['msg'] == 'success'
+        assert len(models.Patient.query.all()) == 2
 
         failed = False
         try:

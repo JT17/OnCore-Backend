@@ -85,7 +85,7 @@ def edit_patient(request):
             if user is None:
                 abort(422, "Invalid patient id")
 
-            if not verify_manager_access(user, auth):
+            if not verify_manager_access(user.id, auth):
                 abort(422, "Invalid manager")
             if 'phone_number' in form_data:
                 if not form_data['phone_number'].isdigit() or len(form_data['phone_number']) == 0:
@@ -130,7 +130,7 @@ def add_patient(request, debug=False):
     auth = request.authorization
     if auth.username:
         manager = Manager.query.filter(Manager.id == int(auth.username)).first()
-        if manager is not None:
+        if manager is None:
             abort(401, 'La identificacion para el gerente es incorecto, por favor intenta otra vez')
         else:
             # right now storing everything as a datetime, but we need to be consistent about this
@@ -178,7 +178,7 @@ def delete_patient(request, debug=False):
     user = Patient.query.filter(Patient.id == form_data['user_id'])
     if user.first() is None:
         abort(422, "La identificacion es incorrecto")
-    if verify_manager_access(user.first().id, auth):
+    if not verify_manager_access(user.first().id, auth):
         abort(422, "La identificacion del gerente es incorrecto")
     try:
         user.delete()
