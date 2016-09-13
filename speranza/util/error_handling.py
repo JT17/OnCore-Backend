@@ -5,11 +5,8 @@ import logging
 from flask import jsonify
 from werkzeug.exceptions import HTTPException
 
+from speranza.util import ERR_LOG, DEBUG_LOG
 from slack_poster import post_alert_to_slack
-
-# global definitions
-ERR_LOG = './application/logs/speranza_error.log'
-DEBUG_LOG = './application/logs/speranza_debug.log'
 
 
 # error handling for all exceptions ex

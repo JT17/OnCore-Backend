@@ -1,6 +1,6 @@
 from flask import Blueprint, request, abort, jsonify
 
-from speranza import auth
+from speranza.application import auth
 import speranza.api.managers
 
 mod_managers = Blueprint('managers', __name__)

@@ -1,9 +1,10 @@
 from flask import Blueprint, redirect, request, abort, jsonify
-from speranza import auth
 
+from speranza.application import auth
 import speranza.api.patients
 
-mod_patients = Blueprint('managers', __name__)
+
+mod_patients = Blueprint('patients', __name__)
 
 
 # God view

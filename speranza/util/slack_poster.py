@@ -1,7 +1,7 @@
 import logging
 from slackclient import SlackClient
 
-from error_handling import ERR_LOG
+from speranza.util import ERR_LOG
 
 SLACK_TOKEN = 'xoxp-23808070245-23809034931-59911397713-e9163071cb'
 

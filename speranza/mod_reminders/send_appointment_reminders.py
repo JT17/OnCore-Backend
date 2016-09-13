@@ -2,8 +2,7 @@
 
 import datetime
 
-from speranza.mod_appointments.models import Appointment
-from speranza.mod_patients.models import Patient
+from speranza.models import Appointment, Patient
 from speranza.util.plivo_messenger import send_message
 
 

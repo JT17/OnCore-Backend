@@ -2,7 +2,7 @@ from flask import Blueprint, flash, render_template, redirect, request, session,
 from werkzeug.security import check_password_hash
 
 from speranza.mod_auth.forms import LoginForm
-from speranza.mod_managers.models import Manager
+from speranza.models import Manager
 
 mod_auth = Blueprint('auth', __name__)
 
