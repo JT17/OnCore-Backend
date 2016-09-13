@@ -3,7 +3,6 @@
 application/*.pyc
 *.swp
 *.db
-test*.py
 venv/*
 env/*
 application/logs/*

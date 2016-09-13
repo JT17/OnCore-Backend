@@ -1,0 +1,15 @@
+Code Cleanup:
+
+- Everywhere there's a print statement, that was because we weren't doing something with a response
+    or an exception. W
+- More specific exception/error handling
+- Better logging:
+    - DEBUG through ERROR logging levels
+        - log all exceptions
+    - MixPanel,
+    - Slack
+- Create, add, update, delete for all tables
+- Test create, add, update, delete all tables
+- Separate tests into different files according to module
+- Re-add 'mod_addresses' and 'mod_organizations' when ready
+- Completely revamp the 'mod_reminders' module

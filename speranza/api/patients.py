@@ -72,6 +72,47 @@ def edit_patient_address(request, debug=False):
             abort(500, "something went wrong")
 
 
+def edit_patient(request):
+    res = {'msg': "something has gone wrong"}
+    form_data = get_form_data(request)
+
+    if 'user_id' not in form_data:
+        abort(422, "No podemos editar el paciente, necesita user_id")
+    else:
+        try:
+            auth = request.authorization
+            user = Patient.query.filter(Patient.id == form_data['user_id']).first()
+            if user is None:
+                abort(422, "Invalid patient id")
+
+            if not verify_manager_access(user, auth):
+                abort(422, "Invalid manager")
+            if 'phone_number' in form_data:
+                if not form_data['phone_number'].isdigit() or len(form_data['phone_number']) == 0:
+                    abort(422, 'Please enter a valid phone number')
+                user.phone_number = form_data['phone_number']
+            if 'contact_number' in form_data:
+                if not form_data['contact_number'].isdigit():
+                    abort(422, 'Please enter a valid contact number')
+                    return res
+                user.contact_number = form_data['contact_number']
+            if 'edit_address' in form_data:
+                edit_patient_address(request)
+            if 'dob' in form_data:
+                user.dob = form_data['dob']
+            try:
+                db.session.commit()
+                res['msg'] = "success"
+                return res
+            except Exception as e:
+                print e
+                db.session.rollback()
+                abort(500, "Something went wrong, couldn't update")
+        except ValueError, e:
+            print e
+            abort(500, "Something went wrong trying to fetch your user_id please try again")
+
+
 def add_patient(request, debug=False):
     res = {'msg': 'something went wrong sorry'}
     form_data = get_form_data(request, debug)

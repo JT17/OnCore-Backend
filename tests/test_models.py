@@ -3,37 +3,37 @@ Tests all of the models and join tables
 (manager_organization_table and admin_table are tested together in one test)
 """
 
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 import unittest
 import datetime
 
-from speranza.mod_addresses.models import Address
-from speranza.mod_appointments.models import Appointment
-from speranza.mod_managers.models import Manager
-from speranza.mod_organizations.models import Organization
-from speranza.mod_patients.models import Patient
-
-from speranza import db, application
+from speranza.models import Address, Appointment, Manager, Organization, Patient
 
 
 class TestModels(unittest.TestCase):
     def setUp(self):
-        application.config['TESTING'] = True
-        application.config['WTF_CSRF_ENABLED'] = False
-        application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-        self.application = application.test_client()
-        db.create_all()
+        self.application = Flask(__name__)
+        self.db = SQLAlchemy(self.application)
+
+        self.application.config['TESTING'] = True
+        self.application.config['WTF_CSRF_ENABLED'] = False
+        self.application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+        self.application = self.application.test_client()
+        self.db.create_all()
 
     def tearDown(self):
-        db.session.remove()
-        db.drop_all()
+        self.db.session.remove()
+        self.db.drop_all()
+        self.application, db = None
 
     def test_address(self):
         full_address = Address(street_number=1234, street_name="test street", street_type="st", city_name="Palo Alto",
                                zipcode=98505, district="CA")
         only_city = Address(city_name="Palo Alto")
-        db.session.add(full_address)
-        db.session.add(only_city)
-        db.session.commit()
+        self.db.session.add(full_address)
+        self.db.session.add(only_city)
+        self.db.session.commit()
         fetch_city = Address.query.filter(Address.city_name == "Palo Alto").all()
         fetch_full = Address.query.filter(Address.street_num == 1234).all()
         assert (len(fetch_full) == 1)
@@ -43,14 +43,14 @@ class TestModels(unittest.TestCase):
         pt_address = Address(city_name="Palo Alto")
         pt_org = Organization(org_name="test_org", org_pwd="pwd")
 
-        db.session.add(pt_address)
-        db.session.add(pt_org)
-        db.session.commit()
+        self.db.session.add(pt_address)
+        self.db.session.add(pt_org)
+        self.db.session.commit()
 
         patient = Patient(firstname="test", lastname="pt", phone_number=12345,
                           contact_number=54321, address_id=pt_address.id, dob="01/01/2000", gov_id=1)
-        db.session.add(patient)
-        db.session.commit()
+        self.db.session.add(patient)
+        self.db.session.commit()
 
         f_p = Patient.query.all()
         assert (len(f_p) == 1)
@@ -66,8 +66,8 @@ class TestModels(unittest.TestCase):
     def test_appointment(self):
         time = datetime.datetime.now()
         new_appointment = Appointment(1, 1, time, "test")
-        db.session.add(new_appointment)
-        db.session.commit()
+        self.db.session.add(new_appointment)
+        self.db.session.commit()
         test_fetch = Appointment.query.filter(Appointment.patient_id == 1).filter(Appointment.manager_id == 1).first()
         assert (test_fetch is not None)
         assert (test_fetch.date == time)
@@ -80,8 +80,8 @@ class TestModels(unittest.TestCase):
         manager = Manager(firstname="test", lastname="user", phone_number=12345, password="pass",
                           email="test_email@email.com")
         assert (manager.org_id == -1)
-        db.session.add(manager)
-        db.session.commit()
+        self.db.session.add(manager)
+        self.db.session.commit()
         fetch_mgr = Manager.query.filter(Manager.firstname == "test").filter(Manager.lastname == "user").first()
         assert fetch_mgr is not None
         assert fetch_mgr.verify_password("pass")
@@ -89,8 +89,8 @@ class TestModels(unittest.TestCase):
 
     def test_org(self):
         new_org = Organization(org_name="test", org_pwd="pwd", org_email="test_email")
-        db.session.add(new_org)
-        db.session.commit()
+        self.db.session.add(new_org)
+        self.db.session.commit()
 
         f_o = Organization.query.all()
         assert (len(f_o) == 1)
@@ -100,9 +100,9 @@ class TestModels(unittest.TestCase):
         admin2 = Manager(firstname="admin", lastname="two", phone_number=12345, password="pass",
                          email="test_email@email.com")
 
-        db.session.add(admin1)
-        db.session.add(admin2)
-        db.session.commit()
+        self.db.session.add(admin1)
+        self.db.session.add(admin2)
+        self.db.session.commit()
 
         new_org.add_admin(admin1.id)
         assert (len(new_org.admins) == 1)
@@ -119,19 +119,19 @@ class TestModels(unittest.TestCase):
 
     def test_org_pt(self):
         pt_address = Address(city_name="Palo Alto")
-        db.session.add(pt_address)
-        db.session.commit()
+        self.db.session.add(pt_address)
+        self.db.session.commit()
         p1 = Patient(firstname="test", lastname="pt", phone_number=12345,
                      contact_number=54321, address_id=pt_address.id, dob="01/01/2000", gov_id=1)
         p2 = Patient(firstname="test1", lastname="pt", phone_number=12345,
                      contact_number=54321, address_id=pt_address.id, dob="01/01/2000", gov_id=2)
         new_org = Organization(org_name="test", org_pwd="pwd", org_email="test_email")
         second_org = Organization(org_name="test2", org_pwd="pwd", org_email="test_email")
-        db.session.add(p1)
-        db.session.add(p2)
-        db.session.add(new_org)
-        db.session.add(second_org)
-        db.session.commit()
+        self.db.session.add(p1)
+        self.db.session.add(p2)
+        self.db.session.add(new_org)
+        self.db.session.add(second_org)
+        self.db.session.commit()
 
         p1.add_to_org(new_org.id)
         assert (len(p1.organizations) == 1)
@@ -148,12 +148,12 @@ class TestModels(unittest.TestCase):
     def test_org_manager(self):
         mgr = Manager("test", "mgr", 12345, "abc@abc.com", "pwd")
         org = Organization("test", "org")
-        db.session.add(org)
-        db.session.commit()
+        self.db.session.add(org)
+        self.db.session.commit()
 
         assert (mgr.set_org(org.id) is not None)
-        db.session.add(mgr)
-        db.session.commit()
+        self.db.session.add(mgr)
+        self.db.session.commit()
 
         org.add_admin(mgr.id)
 
