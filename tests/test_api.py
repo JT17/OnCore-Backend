@@ -68,10 +68,10 @@ class TestApi(unittest.TestCase):
 
         self.pt1 = models.Patient(firstname="test", lastname="pt1", phone_number=12345,
                                   contact_number=54321, address_id=self.addr1.id, dob="01/01/2000", gov_id=1)
-        self.pt2 = models.Patient(firstname="test", lastname="pt2", phone_number=22222,
+        self.pt2 = models.Patient(firstname="test1", lastname="pt2", phone_number=22222,
                                   contact_number=54321, address_id=self.addr2.id, dob="02/02/2002", gov_id=2)
 
-        self.pt3 = models.Patient(firstname="test", lastname="pt3", phone_number=33333,
+        self.pt3 = models.Patient(firstname="test2", lastname="pt3", phone_number=33333,
                                   contact_number=54321, address_id=self.addr3.id, dob="03/03/3003", gov_id=3)
         db.session.add(self.pt1)
         db.session.add(self.pt2)
@@ -408,13 +408,13 @@ class TestApi(unittest.TestCase):
         res = speranza.api.patients.find_patient(request)
         assert (res['msg'] == 'success')
         assert (len(res['patients']) == 1)
-        assert (res['patients'][0].id == self.pt1.id)
+        assert (res['patients'][0]['id'] == self.pt1.id)
 
         request = MyDict()
         request.authorization = auth
         request['gov_id'] = self.pt1.gov_id
         res = speranza.api.patients.find_patient(request)
-        assert (res['patients'][0].id == self.pt1.id)
+        assert (res['patients'][0]['id'] == self.pt1.id)
 
         self.pt2.firstname = self.pt1.firstname
         self.pt2.lastname = self.pt1.lastname
@@ -432,9 +432,9 @@ class TestApi(unittest.TestCase):
         found1 = False
         found2 = False
         for patient in res['patients']:
-            if patient.id == self.pt1.id:
+            if patient['id'] == self.pt1.id:
                 found1 = True
-            if patient.id == self.pt2.id:
+            if patient['id'] == self.pt2.id:
                 found2 = True
         assert found1
         assert found2

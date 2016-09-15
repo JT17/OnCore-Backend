@@ -100,7 +100,17 @@ class Patient(db.Model):
         self.address_id = address_id
         self.dob = dob
         self.gov_id = gov_id
-
+    @property
+    def serialize(self):
+        """Return Patient in easily serializable format"""
+        return {
+            'id':self.id,
+            'firstname':self.firstname,
+            'lastname':self.lastname,
+            'phone_number':self.phone_number,
+            'dob':self.dob,
+            'gov_id':self.gov_id
+        }
     def add_to_org(self, org_id):
         for org in self.organizations:
             if org.id == org_id:

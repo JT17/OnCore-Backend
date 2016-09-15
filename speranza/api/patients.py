@@ -17,24 +17,47 @@ def find_patient(request, debug=False):
     res = {'msg': 'something has gone wrong'}
     form_data = get_form_data(request, debug)
     patients = []
-    if 'firstname' in form_data and 'lastname' in form_data and 'dob' in form_data:
-        patients = Patient.query.filter(Patient.firstname == form_data['firstname']).filter(
-            Patient.lastname == form_data['lastname']).filter(Patient.dob == form_data['dob'])
-    elif 'gov_id' in form_data:
-        patients = Patient.query.filter(Patient.gov_id == int(form_data['gov_id']))
-    else:
+    has_data = False
+    found_patients = {}
+    if 'firstname' in form_data:
+
+        for patient in Patient.query.filter(Patient.firstname == form_data['firstname']).all():
+            if found_patients.has_key(patient.id) is False:
+                patients.append(patient)
+                found_patients[patient.id] = True
+        has_data = True
+    if 'lastname' in form_data:
+        for patient in Patient.query.filter(Patient.lastname == form_data['lastname']).all():
+            if found_patients.has_key(patient.id) is False:
+                patients.append(patient)
+                found_patients[patient.id] = True
+        has_data = True
+    if 'dob' in form_data:
+        for patient in Patient.query.filter(Patient.dob == form_data['dob']).all():
+            if found_patients.has_key(patient.id) is False:
+                patients.append(patient)
+                found_patients[patient.id] = True
+        has_data = True
+    if 'gov_id' in form_data:
+        for patient in Patient.query.filter(Patient.gov_id == int(form_data['gov_id'])).all():
+            if found_patients.has_key(patient.id) is False:
+                patients.append(patient)
+                found_patients[patient.id] = True
+        has_data = True
+    print found_patients
+    if has_data is False:
         abort(422, 'Necesitamos mas informacion sobre el paciente, por favor hacer otra vez')
 
-    mgr_patients = []
+    verified_patients = []
     for patient in patients:
         if verify_manager_access(patient.id, request.authorization):
-            mgr_patients.append(patient)
+            verified_patients.append(patient.serialize)
 
-    if len(mgr_patients) == 0:
+    if len(verified_patients) == 0:
         abort(422, "No hay pacientes con este informacion")
 
     res['msg'] = 'success'
-    res['patients'] = mgr_patients
+    res['patients'] = verified_patients
     return res
 
 
