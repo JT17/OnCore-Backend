@@ -116,6 +116,8 @@ class TestModels(unittest.TestCase):
         new_org.add_admin(12345)
         assert (len(new_org.admins) == 2)
 
+        print new_org.serialize
+
         # new_org.patients
 
     def test_org_pt(self):
@@ -152,10 +154,13 @@ class TestModels(unittest.TestCase):
         db.session.add(org)
         db.session.commit()
 
-        assert (mgr.set_org(org.id) is not None)
         db.session.add(mgr)
         db.session.commit()
+        assert (mgr.set_org(org.id) is None)
 
+        org.add_manager(mgr.id)
+        assert(mgr.set_org(org.id) is not None)
+        assert(mgr.org_id == org.id)
         org.add_admin(mgr.id)
 
         res = org.add_admin(mgr.id)

@@ -13,6 +13,7 @@ import speranza.api.common
 import speranza.api.managers
 import speranza.api.patients
 import speranza.api.verification
+import speranza.api.organizations
 from speranza.application import db
 
 
@@ -60,8 +61,12 @@ class TestApi(unittest.TestCase):
 
         self.mgr = models.Manager("test", "mgr", 12345, "abc@abc.com", "pwd")
         self.mgr1 = models.Manager("test", "mgr1", 12345, "blah@abc.com", "pwd")
-        self.mgr.set_org(self.org1.id)
-        self.mgr1.set_org(self.org2.id)
+
+        self.mgr.org_id = self.org1.id
+        self.mgr1.org_id = self.org2.id
+
+        self.org1.managers.append(self.mgr)
+        self.org2.managers.append(self.mgr1)
         db.session.add(self.mgr)
         db.session.add(self.mgr1)
         db.session.commit()
@@ -515,6 +520,47 @@ class TestApi(unittest.TestCase):
             failed = True
         assert failed
 
+    def test_add_manager_to_org(self):
+        auth = Placeholder()
+        auth.username = self.mgr.id
+
+        request = MyDict()
+        request.authorization = auth
+
+        failed = False
+        try:
+            speranza.api.organizations.add_manager_to_organization(request, debug=True)
+        except Exception as e:
+            assert (type(e) == UnprocessableEntity), e
+            failed = True
+        assert failed
+
+        request['org_id'] = 100
+        failed = False
+        try:
+            speranza.api.organizations.add_manager_to_organization(request, debug=True)
+        except Exception as e:
+            assert (type(e) == UnprocessableEntity), e
+            failed = True
+
+        assert failed
+        request['org_id'] = self.org1.id
+        res = speranza.api.organizations.add_manager_to_organization(request, debug=True)
+        assert res['msg'] == "success"
+        assert self.mgr.org_id == self.org1.id
+        assert self.org1.managers[0].id == self.mgr.org_id
+
+
+    def test_ask_for_org_access(self):
+        auth = Placeholder()
+        auth.username = self.mgr.id
+
+        request = MyDict()
+        request.authorization = auth
+        request['org_id'] = self.org1.id
+        debug_emails = ["jonathan.tiao17@gmail.com"]
+        res = speranza.api.managers.ask_for_org_access(request, debug=True, debug_emails = debug_emails)
+        assert res['msg'] == 'success'
 
 if __name__ == '__main__':
     unittest.main()

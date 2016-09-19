@@ -138,7 +138,7 @@ class Manager(db.Model):
     email = db.Column(String(250), nullable=False)
     password = db.Column(String(128))
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'))
-
+    is_admin = db.Column(db.Boolean, nullable = False)
     def __init__(self, firstname, lastname, phone_number, email, password):
         self.firstname = firstname
         self.lastname = lastname
@@ -146,11 +146,24 @@ class Manager(db.Model):
         self.email = email
         self.password = pwd_context.encrypt(password)
         self.org_id = -1
+        self.is_admin = False
 
+    #to add a manager to an org, they first have to have access. they have access when they've already been added to the org
+    #which is done by the link
     def set_org(self, org_id):
         org = Organization.query.filter(Organization.id == org_id).first()
         if self.org_id != -1 or org is None:
             return None
+
+        has_access = False
+        for manager in org.managers:
+            if manager.id == self.id:
+                has_access = True
+                break
+
+        if has_access is False:
+            return None
+
         self.org_id = org_id
         return self
 
@@ -174,20 +187,35 @@ class Manager(db.Model):
         return user
 
 
+
 class Organization(db.Model):
     __tablename__ = 'organizations'
 
     id = Column(Integer, primary_key=True)
     org_name = Column(String(250), nullable=False)
-    org_pwd = Column(String(250), nullable=True)
     org_email = Column(String(250), nullable=True)
+    managers = db.relationship('Manager', secondary = manager_organization_table)
     admins = db.relationship('Manager', secondary=admin_table)
 
     def __init__(self, org_name, org_pwd, org_email=None):
         self.org_name = org_name
-        self.org_pwd = org_pwd
         if org_email is not None:
             self.org_email = org_email
+
+    @property
+    def serialize(self):
+        return dict(id=self.id, org_name=self.org_name, org_email=self.org_email,
+                    admins=[admin.id for admin in self.admins])
+
+    def add_manager(self, mgr_id):
+        for manager in self.managers:
+            if manager.id == mgr_id:
+                return None
+        mgr = Manager.query.filter(Manager.id == mgr_id).first()
+        if mgr is None:
+            return None
+        self.managers.append(mgr)
+        return self
 
     def add_admin(self, mgr_id):
         for admin in self.admins:
