@@ -16,6 +16,7 @@ do that - it should get stored in the database. So we need to make a
 
 import datetime
 import logging
+from sqlalchemy import desc
 
 from speranza.models import Appointment, Patient
 from speranza.util.plivo_messenger import send_message
@@ -23,9 +24,9 @@ from speranza.util import is_number
 
 
 def send_general_reminders():
-    sent_messages = set()
+    processed_appointments = set()
     general_reminder_sender = GeneralReminderSender()
-    all_appts = Appointment.query.all()
+    all_appts = Appointment.query.order_by(desc(Appointment.date)).all()
     print '# APPOINTMENTS: ', len(all_appts)
     for appt in all_appts:
         try:
@@ -36,14 +37,18 @@ def send_general_reminders():
             user_id = appt.user_id
 
             # Don't want to send duplicate messages
-            if (appt_type, user_id) not in sent_messages:
+            if (appt_type, user_id) not in processed_appointments:
+                if (appt_type == 'NOINSULINA' and ('INSULINA', user_id) in processed_appointments) or \
+                    (appt_type == 'INSULINA' and ('NOINSULINA', user_id) in processed_appointments):
+                        continue
+
                 general_reminder_sender.send_reminder(appt)
-                sent_messages.add((appt_type, user_id))
+                processed_appointments.add((appt_type, user_id))
         except Exception:
             logging.exception("send_general_reminder exception")
 
-    print "# sent_messages: ", len(sent_messages)
-    print sorted(sent_messages, key=lambda message: message[1])
+    print "# sent_messages: ", len(processed_appointments)
+    print sorted(processed_appointments, key=lambda message: message[1])
 
 
 class GeneralReminderSender:
@@ -107,13 +112,13 @@ class GeneralReminderSender:
             logging.exception('exception in send_reminder')
 
     # DIABETES REMINDERS
-    def no_insulina(appt, patient):
+    def no_insulina(self, appt, patient):
         logging.info('called no_insulina')
         message = "Hi {0}, \n realice su dieta, no olvide comer fruitas y verduras cada dia"\
             .format(str(patient.firstname.encode('ascii', 'ignore')))
         return send_message(message, patient.phone_number)
 
-    def insulina(appt, patient):
+    def insulina(self, appt, patient):
         logging.info('called insulina')
         message = "Hi {0}, \n no olvide que necesita injectarse su insulina hoy, " \
                   "30 minutos antes de tu desayuno y cena".format(str(patient.firstname.encode('ascii', 'ignore')))
@@ -158,46 +163,50 @@ class GeneralReminderSender:
     # MERIDA REMINDERS
     def merida_radioterapia(self, appt, patient):
         logging.info('called merida_radioterapia')
-        vals = self.radiation_messages.get(str(datetime.datetime.today().day))
+        vals = self.radiation_messages.get(str(datetime.datetime.today().weekday))
         if not vals:
             logging.info("no matching days in merida_radioterapia")
             return True
         for val in vals:
-            if val not in self.monthly or datetime.datetime.today().day < 7:
-                send_message(self.merida_messages[val], patient.phone_number)
+            send_message(self.merida_messages[val], patient.phone_number)
         return True
 
     def merida_quimoterapia(self, appt, patient):
         logging.info('called merida_quimoterapia')
-        vals = self.chemo_messages.get(str(datetime.datetime.today().day))
+        vals = self.chemo_messages.get(str(datetime.datetime.today().weekday))
         if not vals:
             logging.info("no matching days in merida_quimoterapia")
             return True
         for val in vals:
-            if val not in self.monthly or datetime.datetime.today().day < 7:
-                send_message(self.merida_messages[val], patient.phone_number)
+            send_message(self.merida_messages[val], patient.phone_number)
         return True
 
     def merida_cuidados_paleativos(self, appt, patient):
         logging.info('called merida_cuidados_paleativos')
-        vals = self.pall_messages.get(str(datetime.datetime.today().day))
+        vals = self.pall_messages.get(str(datetime.datetime.today().weekday))
         if not vals:
             logging.info("no matching days in merida_cuidados_paleativos")
             return True
         for val in vals:
-            if val not in self.monthly or datetime.datetime.today().day < 7:
-                send_message(self.merida_messages[val], patient.phone_number)
+            send_message(self.merida_messages[val], patient.phone_number)
         return True
 
     def merida_seguimiento(self, appt, patient):
         logging.info('called inmerida_seguimiento')
-        vals = self.follow_messages.get(str(datetime.datetime.today().day))
+        vals = self.follow_messages.get(str(datetime.datetime.today().weekday))
         if not vals:
             logging.info("no matching days in merida_seguimiento")
             return True
         for val in vals:
-            if val not in self.monthly or datetime.datetime.today().day < 7:
-                send_message(self.merida_messages[val], patient.phone_number)
+            send_message(self.merida_messages[val], patient.phone_number)
+
+        day_of_month = datetime.datetime.today().day
+        if day_of_month == 1:
+            send_message(self.merida_messages[self.monthly[0]])
+        elif day_of_month == 11:
+            send_message(self.merida_messages[self.monthly[1]])
+        elif day_of_month == 21:
+            send_message(self.merida_messages[self.monthly[2]])
         return True
 
 if __name__ == '__main__':
