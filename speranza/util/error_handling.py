@@ -19,12 +19,9 @@ def handle_error(ex):
     # kinda hacky but i want to catch all 5xx errors as server errors
     # to get first digit cast int to string then index, then to compare to 5 cast back to int lol
     if int(str(ex.code)[0]) == 5:
-        logging.basicConfig(format='%(asctime)s : %(levelname)s - %(message)s', filename=ERR_LOG, level=logging.DEBUG)
         logging.error(ex.description)
         post_alert_to_slack(ex.description)
     else:
-        logging.basicConfig(format='%(asctime)s : %(levelname)s - %(message)s', filename=DEBUG_LOG,
-                            level=logging.DEBUG)
         logging.debug(ex.description)
 
     response = jsonify(message)
