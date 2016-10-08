@@ -16,6 +16,7 @@ def send_appointment_reminders(timeframe=datetime.timedelta(days=1)):
 
             # TODO late appointment reminders maybe, once actually checkins work
             time_until_appointment = appt.date - datetime.datetime.now()
+            logging.info(str(time_until_appointment))
             if timeframe >= time_until_appointment >= datetime.timedelta(days=0):
                 patient = Patient.query.filter(Patient.id == appt.user_id).first()
                 message = "Hola {0}, \n no olvide que tiene una cita a las {1}".format(
