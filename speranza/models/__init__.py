@@ -100,17 +100,19 @@ class Patient(db.Model):
         self.address_id = address_id
         self.dob = dob
         self.gov_id = gov_id
+
     @property
     def serialize(self):
         """Return Patient in easily serializable format"""
         return {
-            'id':self.id,
-            'firstname':self.firstname,
-            'lastname':self.lastname,
-            'phone_number':self.phone_number,
-            'dob':self.dob,
-            'gov_id':self.gov_id
+            'id': self.id,
+            'firstname': self.firstname,
+            'lastname': self.lastname,
+            'phone_number': self.phone_number,
+            'dob': self.dob,
+            'gov_id': self.gov_id
         }
+
     def add_to_org(self, org_id):
         for org in self.organizations:
             if org.id == org_id:
@@ -138,7 +140,8 @@ class Manager(db.Model):
     email = db.Column(String(250), nullable=False)
     password = db.Column(String(128))
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'))
-    is_admin = db.Column(db.Boolean, nullable = False)
+    is_admin = db.Column(db.Boolean, nullable=False)
+
     def __init__(self, firstname, lastname, phone_number, email, password):
         self.firstname = firstname
         self.lastname = lastname
@@ -148,8 +151,8 @@ class Manager(db.Model):
         self.org_id = -1
         self.is_admin = False
 
-    #to add a manager to an org, they first have to have access. they have access when they've already been added to the org
-    #which is done by the link
+    # To add a manager to an org, they first have to have access.
+    # They have access when they've already been added to the org which is done by the link
     def set_org(self, org_id):
         org = Organization.query.filter(Organization.id == org_id).first()
         if self.org_id != -1 or org is None:
@@ -187,14 +190,13 @@ class Manager(db.Model):
         return user
 
 
-
 class Organization(db.Model):
     __tablename__ = 'organizations'
 
     id = Column(Integer, primary_key=True)
     org_name = Column(String(250), nullable=False)
     org_email = Column(String(250), nullable=True)
-    managers = db.relationship('Manager', secondary = manager_organization_table)
+    managers = db.relationship('Manager', secondary=manager_organization_table)
     admins = db.relationship('Manager', secondary=admin_table)
 
     def __init__(self, org_name, org_pwd, org_email=None):

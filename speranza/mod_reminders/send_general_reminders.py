@@ -1,4 +1,11 @@
-"""TODO better templating and split into multiple files and add celery tasks"""
+import datetime
+from sqlalchemy import desc
+
+from speranza.models import Appointment, Patient
+from speranza.util.plivo_messenger import send_message
+from speranza.util import is_number
+from speranza.util.logger import logger
+
 
 '''
 General Thoughts on changes we will need to make:
@@ -13,15 +20,6 @@ to patients ('Olga is diabetic'). If the doctor does nothing further, they will 
 default reminder texts. If the doctor wants to make a custom schedule for texts, they should be able to
 do that - it should get stored in the database. So we need to make a
 '''
-
-import datetime
-from sqlalchemy import desc
-
-from speranza.models import Appointment, Patient
-from speranza.util.plivo_messenger import send_message
-from speranza.util import is_number
-from speranza.util.logger import logger
-
 
 def send_general_reminders():
     processed_appointments = set()
@@ -39,8 +37,8 @@ def send_general_reminders():
             # Don't want to send duplicate messages
             if (appt_type, user_id) not in processed_appointments:
                 if (appt_type == 'NOINSULINA' and ('INSULINA', user_id) in processed_appointments) or \
-                    (appt_type == 'INSULINA' and ('NOINSULINA', user_id) in processed_appointments):
-                        continue
+                        (appt_type == 'INSULINA' and ('NOINSULINA', user_id) in processed_appointments):
+                    continue
 
                 general_reminder_sender.send_reminder(appt)
                 processed_appointments.add((appt_type, user_id))
@@ -52,7 +50,6 @@ def send_general_reminders():
 
 
 class GeneralReminderSender:
-
     def __init__(self):
 
         self.APPOINTMENT_TYPES = {
@@ -114,7 +111,7 @@ class GeneralReminderSender:
     # DIABETES REMINDERS
     def no_insulina(self, appt, patient):
         logger.info('called no_insulina')
-        message = "Hi {0}, \n realice su dieta, no olvide comer fruitas y verduras cada dia"\
+        message = "Hi {0}, \n realice su dieta, no olvide comer fruitas y verduras cada dia" \
             .format(str(patient.firstname.encode('ascii', 'ignore')))
         return send_message(message, patient.phone_number)
 
@@ -202,12 +199,13 @@ class GeneralReminderSender:
 
         day_of_month = datetime.datetime.today().day
         if day_of_month == 1:
-            send_message(self.merida_messages[self.monthly[0]])
+            send_message(self.merida_messages[self.monthly[0]], patient.phone_number)
         elif day_of_month == 11:
-            send_message(self.merida_messages[self.monthly[1]])
+            send_message(self.merida_messages[self.monthly[1]], patient.phone_number)
         elif day_of_month == 21:
-            send_message(self.merida_messages[self.monthly[2]])
+            send_message(self.merida_messages[self.monthly[2]], patient.phone_number)
         return True
+
 
 if __name__ == '__main__':
     send_general_reminders()

@@ -274,7 +274,7 @@ class TestApi(unittest.TestCase):
         res = speranza.api.managers.add_manager(request)
         assert (res['msg'] == "success")
 
-        mgr = models.Manager.query.filter(models.Manager.id == res['mgr_id'])
+        mgr = models.Manager.query.filter(models.Manager.id == res['manager_id'])
         assert mgr is not None
         assert len(mgr.all()) == 1, len(mgr.all())
         assert mgr.first().firstname == "Test"
@@ -412,6 +412,7 @@ class TestApi(unittest.TestCase):
 
         res = speranza.api.patients.find_patient(request)
         assert (res['msg'] == 'success')
+        print res['patients']
         assert (len(res['patients']) == 1)
         assert (res['patients'][0]['id'] == self.pt1.id)
 
@@ -558,8 +559,8 @@ class TestApi(unittest.TestCase):
         request = MyDict()
         request.authorization = auth
         request['org_id'] = self.org1.id
-        debug_emails = ["jonathan.tiao17@gmail.com"]
-        res = speranza.api.managers.ask_for_org_access(request, debug=True, debug_emails = debug_emails)
+        # debug_emails = ["jonathan.tiao17@gmail.com"]
+        res = speranza.api.managers.ask_for_org_access(request, debug=True)
         assert res['msg'] == 'success'
 
 if __name__ == '__main__':

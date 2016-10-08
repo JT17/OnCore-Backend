@@ -10,6 +10,7 @@ from speranza.util import email_messaging
 
 REQUEST_LINK = "link to add manager to org endpoint"
 
+
 def verify_manager_access(patient, auth):
     manager = Manager.query.filter(Manager.id == int(auth.username)).first()
     return patient.grant_access(manager.org_id)
@@ -23,11 +24,6 @@ def verify_password(username, password_or_token):
             return False
     g.manager = mgr
     return True
-
-
-def get_all_managers():
-    """Returns all managers"""
-    return Manager.query.all()
 
 
 def add_manager(request, debug=False):
@@ -54,12 +50,13 @@ def add_manager(request, debug=False):
         abort(500, str(err.args))
 
     res['msg'] = 'success'
-    res['mgr_id'] = manager.id
+    res['manager_id'] = manager.id
     return res
 
-#sends out an email to all of the admins with a link
-#TODO talk to deepak for specifics of email to be sent e.g. the url string
-def ask_for_org_access(request, debug = False, debug_emails=[]):
+
+# sends out an email to all of the admins with a link
+# TODO talk to deepak for specifics of email to be sent e.g. the url string
+def ask_for_org_access(request, debug=False):
     res = {'msg': 'Sorry something went wrong'}
     form_data = get_form_data(request, debug)
 
@@ -81,8 +78,7 @@ def ask_for_org_access(request, debug = False, debug_emails=[]):
 
     msg_text = "Hola, \r\n Me llamo {0} {1} y quiero unirme al {2} organizacion. " \
                "Puede agregame al organizacion con este hipirenlace: {3}. \r\n Muchas Gracias, " \
-               "\r\n {4}".format(mgr.firstname, mgr.lastname, \
-               org.org_name, REQUEST_LINK, mgr.firstname)
+               "\r\n {4}".format(mgr.firstname, mgr.lastname, org.org_name, REQUEST_LINK, mgr.firstname)
 
     subj = "Añada un gerente al orgnizacion {0}".decode("utf-8").format(org.org_name)
 
@@ -91,9 +87,5 @@ def ask_for_org_access(request, debug = False, debug_emails=[]):
     if debug is False:
         res['msg'] = email_messaging.send_email(msg_text, admin_emails, subj)
     else:
-        res['msg'] = email_messaging.send_email(msg_text, debug_emails, subj)
+        res['msg'] = email_messaging.send_email(msg_text, [], subj, debug=True)
     return res
-
-
-
-

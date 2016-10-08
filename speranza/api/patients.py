@@ -20,31 +20,29 @@ def find_patient(request, debug=False):
     has_data = False
     found_patients = {}
     if 'firstname' in form_data:
-
         for patient in Patient.query.filter(Patient.firstname == form_data['firstname']).all():
-            if found_patients.has_key(patient.id) is False:
+            if patient.id not in found_patients:
                 patients.append(patient)
                 found_patients[patient.id] = True
         has_data = True
     if 'lastname' in form_data:
         for patient in Patient.query.filter(Patient.lastname == form_data['lastname']).all():
-            if found_patients.has_key(patient.id) is False:
+            if patient.id not in found_patients:
                 patients.append(patient)
                 found_patients[patient.id] = True
         has_data = True
     if 'dob' in form_data:
         for patient in Patient.query.filter(Patient.dob == form_data['dob']).all():
-            if found_patients.has_key(patient.id) is False:
+            if patient.id not in found_patients:
                 patients.append(patient)
                 found_patients[patient.id] = True
         has_data = True
     if 'gov_id' in form_data:
         for patient in Patient.query.filter(Patient.gov_id == int(form_data['gov_id'])).all():
-            if found_patients.has_key(patient.id) is False:
+            if patient.id not in found_patients:
                 patients.append(patient)
                 found_patients[patient.id] = True
         has_data = True
-    print found_patients
     if has_data is False:
         abort(422, 'Necesitamos mas informacion sobre el paciente, por favor hacer otra vez')
 
@@ -136,6 +134,7 @@ def edit_patient(request):
             abort(500, "Something went wrong trying to fetch your user_id please try again")
 
 
+# TODO check for duplicate patients
 def add_patient(request, debug=False):
     res = {'msg': 'something went wrong sorry'}
     form_data = get_form_data(request, debug)

@@ -15,7 +15,6 @@ application.secret_key = '3treelandscaping'
 application.logger.addHandler(h1)
 application.logger.addHandler(h2)
 
-
 assert (application.secret_key == '3treelandscaping')
 
 # Define the database object which is imported by modules and controllers
@@ -34,11 +33,13 @@ def not_found():
 def index():
     return render_template('index.html', appts=[], patients=[])
 
+
 @application.before_request
 def log_entry():
     application.logger.debug("Handling request")
 
+
 @application.after_request
 def log_result(response):
-    application.logger.debug("Response with code %s and data %s" %(response.status, str(response.get_data())))
+    application.logger.debug("Response with code %s and data %s" % (response.status, str(response.get_data())))
     return response

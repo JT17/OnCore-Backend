@@ -6,16 +6,6 @@ from speranza.application import auth
 mod_appointments = Blueprint('appointments', __name__)
 
 
-# God view
-@mod_appointments.route('/get_all_appts', methods=['GET', 'POST'])
-def get_all_appts():
-    res = speranza.api.appointments.get_all_appts()
-    if res['msg'] == 'success':
-        jsonify(status='200', value=str(res['msg']), appts=res['appts'])
-    else:
-        abort(500, res['msg'])
-
-
 @mod_appointments.route('/api/get_patient_appts', methods=['GET', 'POST'])
 @auth.login_required
 def get_patient_appts():
