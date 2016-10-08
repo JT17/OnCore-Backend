@@ -79,8 +79,10 @@ def ask_for_org_access(request, debug = False, debug_emails=[]):
     if org is None:
         abort(422, "No hay organizacion con este identificacion")
 
-    msg_text = "Hola, \r\n Me llamo {0} {1} y quiero unirme al {2} organizacion. Puede agregame al organizacion con este hipirenlace: {3}. \r\n Muchas Gracias, \r\n {4}".format(mgr.firstname, mgr.lastname, \
-                                                                                                 org.org_name, REQUEST_LINK, mgr.firstname)
+    msg_text = "Hola, \r\n Me llamo {0} {1} y quiero unirme al {2} organizacion. " \
+               "Puede agregame al organizacion con este hipirenlace: {3}. \r\n Muchas Gracias, " \
+               "\r\n {4}".format(mgr.firstname, mgr.lastname, \
+               org.org_name, REQUEST_LINK, mgr.firstname)
 
     subj = "Añada un gerente al orgnizacion {0}".decode("utf-8").format(org.org_name)
 

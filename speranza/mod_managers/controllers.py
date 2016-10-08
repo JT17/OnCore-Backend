@@ -2,6 +2,7 @@ from flask import Blueprint, request, abort, jsonify
 
 from speranza.application import auth
 import speranza.api.managers
+from speranza.util.logger import logger
 
 mod_managers = Blueprint('managers', __name__)
 
@@ -15,7 +16,6 @@ def get_all_managers():
 
 
 @mod_managers.route('/api/add_manager', methods=['GET', 'POST'])
-@auth.login_required
 def add_manager():
     res = speranza.api.managers.add_manager(request)
     if res['msg'] == 'success':

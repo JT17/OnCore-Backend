@@ -15,19 +15,19 @@ do that - it should get stored in the database. So we need to make a
 '''
 
 import datetime
-import logging
 from sqlalchemy import desc
 
 from speranza.models import Appointment, Patient
 from speranza.util.plivo_messenger import send_message
 from speranza.util import is_number
+from speranza.util.logger import logger
 
 
 def send_general_reminders():
     processed_appointments = set()
     general_reminder_sender = GeneralReminderSender()
     all_appts = Appointment.query.order_by(desc(Appointment.date)).all()
-    print '# APPOINTMENTS: ', len(all_appts)
+    logger.info('# APPOINTMENTS: ', len(all_appts))
     for appt in all_appts:
         try:
             # TODO this way of categorizing patients based on appointments isn't correct.
@@ -45,10 +45,10 @@ def send_general_reminders():
                 general_reminder_sender.send_reminder(appt)
                 processed_appointments.add((appt_type, user_id))
         except Exception:
-            logging.exception("send_general_reminder exception")
+            logger.exception("send_general_reminder exception")
 
-    print "# sent_messages: ", len(processed_appointments)
-    print sorted(processed_appointments, key=lambda message: message[1])
+    logger.info("# sent_messages: ", len(processed_appointments))
+    logger.info(sorted(processed_appointments, key=lambda message: message[1]))
 
 
 class GeneralReminderSender:
@@ -101,25 +101,25 @@ class GeneralReminderSender:
         # Check that the appointment type exists
         appt_type = str(appt.appt_type).upper().replace(" ", "")
         if appt_type not in self.APPOINTMENT_TYPES:
-            logging.error("ILL-FORMATTED APPOINTMENT TYPE PLEASE FIX ME: {0}".format(appt_type))
+            logger.error("ILL-FORMATTED APPOINTMENT TYPE PLEASE FIX ME: {0}".format(appt_type))
             return
 
         try:
             patient = Patient.query.filter(Patient.id == appt.user_id).first()
             reminder_sent = self.APPOINTMENT_TYPES[appt_type](appt, patient)
-            logging.info('reminder sent?: [{0}]'.format(reminder_sent))
+            logger.info('reminder sent?: [{0}]'.format(reminder_sent))
         except Exception:
-            logging.exception('exception in send_reminder')
+            logger.exception('exception in send_reminder')
 
     # DIABETES REMINDERS
     def no_insulina(self, appt, patient):
-        logging.info('called no_insulina')
+        logger.info('called no_insulina')
         message = "Hi {0}, \n realice su dieta, no olvide comer fruitas y verduras cada dia"\
             .format(str(patient.firstname.encode('ascii', 'ignore')))
         return send_message(message, patient.phone_number)
 
     def insulina(self, appt, patient):
-        logging.info('called insulina')
+        logger.info('called insulina')
         message = "Hi {0}, \n no olvide que necesita injectarse su insulina hoy, " \
                   "30 minutos antes de tu desayuno y cena".format(str(patient.firstname.encode('ascii', 'ignore')))
         return send_message(message, patient.phone_number)
@@ -129,73 +129,73 @@ class GeneralReminderSender:
         try:
             messages = self.hemeonc_messages[treatment]
         except KeyError:
-            logging.error('no matching treatment in hemeonc_reminders for [{0}]'.format(treatment))
+            logger.error('no matching treatment in hemeonc_reminders for [{0}]'.format(treatment))
             return False
 
         days_since = (datetime.datetime.today() - appt.date).days
-        logging.info("days_since: [{0}] in treatment [{1}]".format(str(days_since), treatment))
+        logger.info("days_since: [{0}] in treatment [{1}]".format(str(days_since), treatment))
 
         if int(days_since) in self.hemeonc_messages[treatment]:
-            logging.info("days_since match in treatment [{0}]".format(treatment))
+            logger.info("days_since match in treatment [{0}]".format(treatment))
             patient = Patient.query.filter(Patient.id == appt.user_id).first()
             message = messages[int(days_since)]
             return send_message(message, patient.phone_number)
         else:
-            logging.info("no days since match in treatment [{0}]".format(treatment))
+            logger.info("no days since match in treatment [{0}]".format(treatment))
             return False
 
     def gemoxyabvd(self, appt, patient):
-        logging.info('called gemoxyabvd')
+        logger.info('called gemoxyabvd')
         return self.hemeonc_reminder(appt, patient, 'gemoxyabvd')
 
     def chop(self, appt, patient):
-        logging.info('called chop')
+        logger.info('called chop')
         return self.hemeonc_reminder(appt, patient, 'chop')
 
     def eshap(self, appt, patient):
-        logging.info('called eshap')
+        logger.info('called eshap')
         return self.hemeonc_reminder(appt, patient, 'eshap')
 
     def iceyvipd(self, appt, patient):
-        logging.info('called iceyvipd')
+        logger.info('called iceyvipd')
         return self.hemeonc_reminder(appt, patient, 'iceyvipd')
 
     # MERIDA REMINDERS
     def merida_radioterapia(self, appt, patient):
-        logging.info('called merida_radioterapia')
+        logger.info('called merida_radioterapia')
         vals = self.radiation_messages.get(str(datetime.datetime.today().weekday))
         if not vals:
-            logging.info("no matching days in merida_radioterapia")
+            logger.info("no matching days in merida_radioterapia")
             return True
         for val in vals:
             send_message(self.merida_messages[val], patient.phone_number)
         return True
 
     def merida_quimoterapia(self, appt, patient):
-        logging.info('called merida_quimoterapia')
+        logger.info('called merida_quimoterapia')
         vals = self.chemo_messages.get(str(datetime.datetime.today().weekday))
         if not vals:
-            logging.info("no matching days in merida_quimoterapia")
+            logger.info("no matching days in merida_quimoterapia")
             return True
         for val in vals:
             send_message(self.merida_messages[val], patient.phone_number)
         return True
 
     def merida_cuidados_paleativos(self, appt, patient):
-        logging.info('called merida_cuidados_paleativos')
+        logger.info('called merida_cuidados_paleativos')
         vals = self.pall_messages.get(str(datetime.datetime.today().weekday))
         if not vals:
-            logging.info("no matching days in merida_cuidados_paleativos")
+            logger.info("no matching days in merida_cuidados_paleativos")
             return True
         for val in vals:
             send_message(self.merida_messages[val], patient.phone_number)
         return True
 
     def merida_seguimiento(self, appt, patient):
-        logging.info('called inmerida_seguimiento')
+        logger.info('called inmerida_seguimiento')
         vals = self.follow_messages.get(str(datetime.datetime.today().weekday))
         if not vals:
-            logging.info("no matching days in merida_seguimiento")
+            logger.info("no matching days in merida_seguimiento")
             return True
         for val in vals:
             send_message(self.merida_messages[val], patient.phone_number)
