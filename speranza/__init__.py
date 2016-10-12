@@ -4,6 +4,7 @@ from speranza.mod_managers.controllers import mod_managers
 from speranza.mod_patients.controllers import mod_patients
 
 from speranza.application import application
+from speranza.application import db
 
 
 # Register blueprints
@@ -11,3 +12,5 @@ application.register_blueprint(mod_appointments)
 application.register_blueprint(mod_auth)
 application.register_blueprint(mod_managers)
 application.register_blueprint(mod_patients)
+
+db.create_all()

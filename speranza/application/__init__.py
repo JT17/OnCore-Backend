@@ -15,8 +15,6 @@ application.secret_key = '3treelandscaping'
 application.logger.addHandler(h1)
 application.logger.addHandler(h2)
 
-assert (application.secret_key == '3treelandscaping')
-
 # Define the database object which is imported by modules and controllers
 db = SQLAlchemy(application)
 
@@ -31,6 +29,7 @@ def not_found():
 
 @application.route("/", methods=['GET', 'POST'])
 def index():
+    print "get /"
     return render_template('index.html', appts=[], patients=[])
 
 

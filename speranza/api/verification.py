@@ -10,6 +10,10 @@ def verify_manager_access(patient_id, auth):
     return patient.grant_access(manager.org_id)
 
 
+# TODO
+# Return which args do not exist if they don't exist
+# Return true if everything's fine
+# Change how everything uses this function
 def verify_form_data(args, form_data):
     for arg in args:
         if arg not in form_data:

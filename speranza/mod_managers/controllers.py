@@ -10,7 +10,7 @@ mod_managers = Blueprint('managers', __name__)
 def add_manager():
     res = speranza.api.managers.add_manager(request)
     if res['msg'] == 'success':
-        return jsonify(status='200', value=res['msg'], manager_id=res['mgr_id'])
+        return jsonify(status='200', value=res['msg'], manager_id=res['manager_id'])
     else:
         abort(500, res['msg'])
 
