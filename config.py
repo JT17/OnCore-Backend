@@ -4,8 +4,7 @@ import os
 # Statement for enabling the development environment
 DEBUG = False
 
-# Define the application directory
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
 
 SQLALCHEMY_TRACK_MODIFICATIONS = "False"
 
@@ -34,7 +33,9 @@ WTF_CSRF_ENABLED = True
 SQLALCHEMY_DATABASE_URI = \
 "mssql+pymssql://speranza-dev@speranza-server:3Treelandscaping@speranza-server.database.windows.net/speranza-db"
 
-# SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'speranza.db')
+# Define the application directory
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'speranza.db')
 
 # SQLALCHEMY_POOL_SIZE = 20
 # SQLALCHEMY_POOL_RECYCLE = 280

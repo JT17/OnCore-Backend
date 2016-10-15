@@ -412,7 +412,6 @@ class TestApi(unittest.TestCase):
 
         res = speranza.api.patients.find_patient(request)
         assert (res['msg'] == 'success')
-        print res['patients']
         assert (len(res['patients']) == 1)
         assert (res['patients'][0]['id'] == self.pt1.id)
 
