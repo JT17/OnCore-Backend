@@ -9,9 +9,6 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 SQLALCHEMY_TRACK_MODIFICATIONS = "False"
 
-# Define the database - we are working with
-# SQLite for this example
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'speranza.db')
 DATABASE_CONNECT_OPTIONS = {}
 
 # Application threads. A common general assumption is
@@ -33,12 +30,11 @@ SECRET_KEY = "dsaf0897sfdg45sfdgfdsaqzdf98sdf0a"
 # Enable protection agains *Cross-site Request Forgery (CSRF)*
 WTF_CSRF_ENABLED = True
 
-# edit the URI below to add your RDS password and your AWS URL
-# The other elements are the same as used in the tutorial
-# format: (user):(password)@(db_identifier).amazonaws.com:3306/(db_name)
+# Specifies conncetion to azure sql server
+SQLALCHEMY_DATABASE_URI = \
+"mssql+pymssql://speranza-dev@speranza-server:3Treelandscaping@speranza-server.database.windows.net/speranza-db"
 
-# SQLALCHEMY_DATABASE_URI =
-# 'mysql+pymysql://speranzaadmin:tunesquad3@speranzabeta.c0hrd44urhuf.sa-east-1.rds.amazonaws.com:3306/betajunedb'
+# SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'speranza.db')
 
 # SQLALCHEMY_POOL_SIZE = 20
 # SQLALCHEMY_POOL_RECYCLE = 280
