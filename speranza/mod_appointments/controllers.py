@@ -56,7 +56,7 @@ def edit_appt():
 @mod_appointments.route('/api/delete_appt', methods=['GET', 'POST'])
 @auth.login_required
 def delete_appt():
-    res = delete_appt(request)
+    res = speranza.api.appointments.delete_appt(request)
     if res['msg'] == 'success':
         return jsonify(status='200', value=str(res['msg']))
     else:

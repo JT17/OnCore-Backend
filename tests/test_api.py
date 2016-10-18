@@ -198,25 +198,25 @@ class TestApi(unittest.TestCase):
         speranza.api.addresses.add_address(request)
         assert len(models.Address.query.filter(models.Address.street_num == 1).all()) == 1
 
-        request['street_name'] = "Test"
+        request['street_name'] = "q"
         speranza.api.addresses.add_address(request)
-        assert len(models.Address.query.filter(models.Address.street_name == "Test").all()) == 1
+        assert len(models.Address.query.filter(models.Address.street_name == "q").all()) == 1
 
-        request['street_type'] = "St"
+        request['street_type'] = "qq"
         speranza.api.addresses.add_address(request)
-        assert len(models.Address.query.filter(models.Address.street_type == "St").all()) == 1
+        assert len(models.Address.query.filter(models.Address.street_type == "qq").all()) == 1
 
-        request['city_name'] = "Cincinnati"
+        request['city_name'] = "qqq"
         speranza.api.addresses.add_address(request)
-        assert len(models.Address.query.filter(models.Address.city_name == "Cincinnati").all()) == 1
+        assert len(models.Address.query.filter(models.Address.city_name == "qqq").all()) == 1
 
         request['zipcode'] = 12345
         speranza.api.addresses.add_address(request)
         assert len(models.Address.query.filter(models.Address.zipcode == 12345).all()) == 1
 
-        request['district'] = 54321
+        request['district'] = "qqqq"
         speranza.api.addresses.add_address(request)
-        assert len(models.Address.query.filter(models.Address.district == 54321).all()) == 1
+        assert len(models.Address.query.filter(models.Address.district == "qqqq").all()) == 1
 
         assert len(models.Address.query.all()) == 9
 
@@ -229,6 +229,7 @@ class TestApi(unittest.TestCase):
         try:
             speranza.api.patients.add_patient(request)
         except Exception as e:
+            print e
             assert (type(e) == UnprocessableEntity), traceback.format_exc()
             failed = True
         assert failed
@@ -236,20 +237,21 @@ class TestApi(unittest.TestCase):
         request['lastname'] = "Test"
         request['phone_number'] = "12345678"
         request['contact_number'] = "87654321"
-        request['dob'] = 01 / 01 / 2001
+        request['dob'] = "01/01/2001"
         request['gov_id'] = 42
         request['city_name'] = "City"
         failed = False
         try:
             speranza.api.patients.add_patient(request)
         except Exception as e:
+            print e
             assert (type(e) == UnprocessableEntity), e
             failed = True
         assert failed
 
         request['firstname'] = "John"
-        res = speranza.api.patients.add_patient(request)
-        assert (res['patient_contact_number'] == 50287654321), res
+        res = speranza.api.patients.add_patient(request, debug=True)
+        assert (res['patient_contact_number'] == "50287654321"), res
         assert len(models.Patient.query.all()) == 4
 
         # make sure patient is in the right org
@@ -309,13 +311,12 @@ class TestApi(unittest.TestCase):
         assert (len(appts) == 3), len(appts)
 
         appt_by_date = sorted(appts, key=lambda appt: appt['date'])
-        assert (appt_by_date[0]['patient_id'] == self.pt3.id)
-        assert (appt_by_date[0]['date'] == today3_ts)
+        assert (appt_by_date[0]['date'].strftime("%Y-%m-%d %H:%M") == today3_ts.strftime("%Y-%m-%d %H:%M"))
         assert (appt_by_date[0]['firstname'] == self.pt3.firstname)
         assert (appt_by_date[0]['lastname'] == self.pt3.lastname)
         assert (appt_by_date[0]['appt_type'] == "blah")
         assert (appt_by_date[2]['patient_id'] == self.pt1.id)
-        assert (appt_by_date[2]['date'] == today_ts)
+        assert (appt_by_date[2]['date'].strftime("%Y-%m-%d %H:%M") == today_ts.strftime("%Y-%m-%d %H:%M"))
         assert (appt_by_date[2]['firstname'] == self.pt1.firstname)
         assert (appt_by_date[2]['lastname'] == self.pt1.lastname)
         assert (appt_by_date[2]['appt_type'] == "blah")
@@ -334,7 +335,7 @@ class TestApi(unittest.TestCase):
         request['phone_number'] = '42'
         speranza.api.patients.edit_patient(request)
         pt = models.Patient.query.filter(models.Patient.id == self.pt1.id).first()
-        assert (pt.phone_number == 42)
+        assert (pt.phone_number == '42')
         failed = False
         try:
             request['phone_number'] = 'a'
@@ -347,7 +348,7 @@ class TestApi(unittest.TestCase):
         request['contact_number'] = '23'
         speranza.api.patients.edit_patient(request)
         pt = models.Patient.query.filter(models.Patient.id == self.pt1.id).first()
-        assert (pt.contact_number == 23)
+        assert (pt.contact_number == '23')
         request['dob'] = '07/07/07'
         speranza.api.patients.edit_patient(request)
         pt = models.Patient.query.filter(models.Patient.id == self.pt1.id).first()
@@ -499,11 +500,10 @@ class TestApi(unittest.TestCase):
         auth = Placeholder()
         auth.username = self.mgr.id
 
-        p = self.pt1.add_to_org(self.mgr.org_id)
-        print p
+        self.pt1.add_to_org(self.mgr.org_id)
+
         request = MyDict()
         request.authorization = auth
-        print request.authorization.username
 
         request['user_id'] = self.pt1.id
         res = speranza.api.patients.delete_patient(request)

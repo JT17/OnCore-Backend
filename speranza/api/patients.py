@@ -4,8 +4,9 @@ from speranza.models import Address, Manager, Patient, Organization
 from speranza.api.verification import verify_form_data, verify_manager_access, verify_new_user
 from speranza.api.common import get_form_data, sanitize_phone_number
 from speranza.api.addresses import add_address
-from speranza.util.mixpanel_logging import mp
 from speranza.application import db
+from speranza.util.mixpanel_logging import mp
+from speranza.util.plivo_messenger import send_message
 
 
 def get_patients():
@@ -159,14 +160,18 @@ def add_patient(request, debug=False):
             # dob = datetime.datetime.utcfromtimestamp(float(form_data['dob']));
             patient_phone_number = sanitize_phone_number(form_data['phone_number'])
             patient_contact_number = sanitize_phone_number(form_data['contact_number'])
-            patient = Patient(form_data['firstname'], form_data['lastname'], patient_phone_number,
-                              patient_contact_number, patient_addr.id, form_data['dob'], form_data['gov_id'])
-            # message = client.messages.create(to=form_data['phone_number'],
-            # from_=form_data['phone_number'],body=add_patient_message)
-            # message = "Gracias para unir Speranza Health"
+            patient = Patient(firstname=form_data['firstname'],
+                              lastname=form_data['lastname'],
+                              phone_number=patient_phone_number,
+                              contact_number=patient_contact_number,
+                              address_id=patient_addr.id,
+                              dob=form_data['dob'],
+                              gov_id=form_data['gov_id'])
 
-            # r = send_message(message, patient.contact_number, debug)
-            # print r
+            message = "Gracias para unir Speranza Health"
+
+            r = send_message(message, patient.contact_number, debug)
+            print r
 
             # add patient to organization
             manager_org = Organization.query.filter(Organization.id == manager.org_id).first()
@@ -180,6 +185,7 @@ def add_patient(request, debug=False):
                              properties={'firstname': form_data['firstname'], 'lastname': form_data['lastname'],
                                          'dob': form_data['dob'], 'gov_id': form_data['gov_id']})
             except Exception, e:
+                print e
                 abort(500, str(e))
 
             res['msg'] = 'success'

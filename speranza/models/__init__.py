@@ -84,8 +84,8 @@ class Patient(db.Model):
     id = Column(Integer, primary_key=True)
     firstname = Column(String(250), nullable=False)
     lastname = Column(String(250), nullable=False)
-    phone_number = Column(Integer, nullable=False)
-    contact_number = Column(Integer, nullable=False)
+    phone_number = Column(String(250), nullable=False)
+    contact_number = Column(String(250), nullable=False)
     address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True)
     dob = Column(String(250), nullable=False)
     gov_id = Column(Integer, nullable=False)
@@ -136,10 +136,10 @@ class Manager(db.Model):
     id = db.Column(Integer, primary_key=True)
     firstname = db.Column(String(250), nullable=False)
     lastname = db.Column(String(250), nullable=False)
-    phone_number = db.Column(Integer, nullable=False)
+    phone_number = db.Column(String(128), nullable=False)
     email = db.Column(String(250), nullable=False)
     password = db.Column(String(128))
-    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'))
+    org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=True)
     is_admin = db.Column(db.Boolean, nullable=False)
 
     def __init__(self, firstname, lastname, phone_number, email, password):
@@ -148,14 +148,14 @@ class Manager(db.Model):
         self.phone_number = phone_number
         self.email = email
         self.password = pwd_context.encrypt(password)
-        self.org_id = -1
+        self.org_id = None
         self.is_admin = False
 
     # To add a manager to an org, they first have to have access.
     # They have access when they've already been added to the org which is done by the link
     def set_org(self, org_id):
         org = Organization.query.filter(Organization.id == org_id).first()
-        if self.org_id != -1 or org is None:
+        if self.org_id is not None or org is None:
             return None
 
         has_access = False
@@ -164,7 +164,7 @@ class Manager(db.Model):
                 has_access = True
                 break
 
-        if has_access is False:
+        if not has_access:
             return None
 
         self.org_id = org_id

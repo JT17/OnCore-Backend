@@ -1,7 +1,9 @@
 from flask import Flask, render_template
 from flask_httpauth import HTTPBasicAuth
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.exceptions import default_exceptions
 from speranza.util.logger import h1, h2
+import speranza.util.error_handling as error_handling
 
 # Define the WSGI application object
 application = Flask(__name__)
@@ -15,6 +17,9 @@ application.logger.addHandler(h2)
 
 # Define the database object which is imported by modules and controllers
 db = SQLAlchemy(application)
+
+# for code in default_exceptions.iterkeys():
+#     application.error_handler_spec[None][code] = error_handling.handle_error
 
 # TODO using simple HTTP auth at the moment. Should use HTTPS for everything.
 auth = HTTPBasicAuth()

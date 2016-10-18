@@ -13,3 +13,6 @@ Code Cleanup:
 - Separate tests into different files according to module
 - Re-add 'mod_addresses' and 'mod_organizations' when ready
 - Completely revamp the 'mod_reminders' module
+- Add cascades to all database relationships
+- delete_patient is broken when the patient is added to an org. Only revealed when connected to azure sql db.
+- Have the testing config go to a testing azure sql db since mssql is different that sqlite.
