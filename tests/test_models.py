@@ -4,7 +4,6 @@ Tests all of the models and join tables
 """
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 import unittest
 import datetime
 
@@ -15,13 +14,12 @@ from speranza.application import db
 class TestModels(unittest.TestCase):
     def setUp(self):
         self.application = Flask(__name__)
+        self.application.config.from_object('tests.config')
 
-        self.application.config['TESTING'] = True
-        self.application.config['WTF_CSRF_ENABLED'] = False
-        self.application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-        self.application = self.application.test_client()
-
+        db.init_app(self.application)
         db.create_all()
+
+        self.application = self.application.test_client()
 
     def tearDown(self):
         db.session.remove()

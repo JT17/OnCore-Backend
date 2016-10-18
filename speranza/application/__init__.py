@@ -8,8 +8,6 @@ application = Flask(__name__)
 
 # Configurations
 application.config.from_object('config')
-application.debug = False
-application.secret_key = '3treelandscaping'
 
 # Application logging
 application.logger.addHandler(h1)

@@ -32,13 +32,12 @@ class MyDict(dict):
 class TestApi(unittest.TestCase):
     def setUp(self):
         self.application = Flask(__name__)
+        self.application.config.from_object('tests.config')
 
-        self.application.config['TESTING'] = True
-        self.application.config['WTF_CSRF_ENABLED'] = False
-        self.application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-        self.application = self.application.test_client()
-
+        db.init_app(self.application)
         db.create_all()
+
+        self.application = self.application.test_client()
 
         self.addr1 = models.Address(city_name="Palo Alto")
         self.addr2 = models.Address(street_number=1234, street_name="test street", street_type="st",
