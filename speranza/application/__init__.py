@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.exceptions import default_exceptions
 from speranza.util.logger import h1, h2
 import speranza.util.error_handling as error_handling
+import speranza.api.verification
 
 # Define the WSGI application object
 application = Flask(__name__)
@@ -23,6 +24,11 @@ db = SQLAlchemy(application)
 
 # TODO using simple HTTP auth at the moment. Should use HTTPS for everything.
 auth = HTTPBasicAuth()
+
+
+@auth.verify_password
+def verify_password(username_or_token, pwd):
+    return speranza.api.verification.verify_password(username_or_token, pwd);
 
 
 @application.errorhandler(404)

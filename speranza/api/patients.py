@@ -175,7 +175,8 @@ def add_patient(request, debug=False):
 
             # add patient to organization
             manager_org = Organization.query.filter(Organization.id == manager.org_id).first()
-            patient.organizations.append(manager_org)
+            if manager_org:
+                patient.organizations.append(manager_org)
 
             try:
                 db.session.add(patient)
