@@ -7,7 +7,9 @@ from flask import abort
 def verify_manager_access(patient_id, auth):
     patient = Patient.query.filter(Patient.id == patient_id).first()
     manager = Manager.query.filter(Manager.id == int(auth.username)).first()
-    return patient.grant_access(manager.org_id)
+    if manager.org_id:
+        return patient.grant_access(manager.org_id)
+    return True
 
 
 # TODO

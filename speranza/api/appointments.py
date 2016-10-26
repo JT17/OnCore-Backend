@@ -75,7 +75,7 @@ def add_appt(request, debug=False):
             abort(401, "La identificacion del gerente es incorrecto")
         try:
             # right now storing everything as a datetime, but we need to be consistent about this
-            timestamp = datetime.datetime.utcfromtimestamp(int(form_data['date']))
+            timestamp = datetime.datetime.utcfromtimestamp(int(float((form_data['date']))))
             exists = Appointment.query.filter(Appointment.patient_id == form_data['user_id']).filter(
                 Appointment.date == timestamp)
 
