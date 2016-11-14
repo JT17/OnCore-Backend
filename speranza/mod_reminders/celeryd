@@ -1,0 +1,9 @@
+
+
+CELERYD_NODES="worker1 worker2"
+
+CELERY_APP="schedule_reminders"
+
+CELERYD_OPTS="--time-limit=300 -Q:worker1 celery -Q:worker2 general_reminder"
+
+CELERYD_LOG_FILE="/var/log/celery/%N.log"
