@@ -7,7 +7,7 @@ from flask import Flask
 import unittest
 import datetime
 
-from speranza.models import Address, Appointment, Manager, Organization, Patient
+from speranza.models import Address, Appointment, Manager, Organization, Patient, Text
 from speranza.application import db
 
 
@@ -29,6 +29,7 @@ class TestModels(unittest.TestCase):
                           email="test_email@email.com")
         self.new_patient = Patient(firstname="test", lastname="pt", phone_number=12345,
                           contact_number=54321, address_id=self.new_address.id, dob="01/01/2000", gov_id=1)
+
 
     def tearDown(self):
         db.session.remove()
@@ -166,3 +167,22 @@ class TestModels(unittest.TestCase):
 
         assert (self.new_manager.org_id == self.new_org.id)
         assert (self.new_manager.set_org(10) is None)
+
+    def test_text(self):
+        db.session.add(self.new_org)
+        db.session.commit()
+
+        new_text = Text(org_id=self.new_org.id, text_msg="Test text message")
+        db.session.add(new_text)
+        db.session.commit()
+
+        assert(new_text.id is not None)
+        assert(new_text.org_id == self.new_org.id)
+
+        text_messages = Text.query.all()
+        assert(len(text_messages) == 1)
+        text_1 = text_messages[0]
+        assert(text_1.id == new_text.id)
+        assert(text_1.org_id == self.new_org.id)
+
+

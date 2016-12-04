@@ -229,3 +229,19 @@ class Organization(db.Model):
             return None
         self.admins.append(mgr)
         return self
+
+class Text(db.Model):
+    __tablename__ = 'texts'
+
+    id = Column(Integer, primary_key=True)
+    org_id = Column(db.Integer, db.ForeignKey('organizations.id'))
+    text_msg = Column(String(400), nullable=False)
+
+    def __init__(self, org_id, text_msg):
+        self.org_id = org_id
+        self.text_msg = text_msg
+
+    @property
+    def serialize(self):
+        return dict(id=self.id, org_id=self.org_id, text_msg=self.text_msg)
+
