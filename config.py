@@ -28,8 +28,8 @@ WTF_CSRF_ENABLED = True
 
 # Specifies conncetion to azure sql server
 SQLALCHEMY_DATABASE_URI = \
-"mssql+pymssql://speranza-dev@speranza-server:3Treelandscaping@speranza-server.database.windows.net/speranza-db"
-# "sqlite:///speranza_test.db"
+"sqlite:///speranza_test.db"
+# "mssql+pymssql://speranza-dev@speranza-server:3Treelandscaping@speranza-server.database.windows.net/speranza-db"
 
 
 # SQLALCHEMY_POOL_SIZE = 20
