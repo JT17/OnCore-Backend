@@ -561,5 +561,215 @@ class TestApi(unittest.TestCase):
         res = speranza.api.managers.ask_for_org_access(request, debug=True)
         assert res['msg'] == 'success'
 
+    def test_add_text_regimen_only_new(self):
+        new_text = models.Text(self.org1.id, "New text message 1")
+        new_text1 = models.Text(self.org1.id, "New text message 2")
+        new_text2 = models.Text(self.org2.id, "New message for org 2")
+
+        db.session.add(new_text)
+        db.session.add(new_text1)
+        db.session.add(new_text2)
+        db.session.commit()
+
+        auth = Placeholder()
+        auth.username = self.mgr.id
+
+        request = MyDict()
+        request.authorization = auth
+        requirements = ['text_msgs', 'regimen_name']
+        #test with correctly formatted new messages
+        text1 = {"day":"monday", "msg":"add new message 1", "new_text":True}
+        text2 = {"day":"tuesday", "msg": "add new message 2", "new_text":True}
+        request["text_msgs"] = [text1, text2]
+        request["regimen_name"] = "only new messages"
+        res = speranza.api.organizations.add_text_regimen(request, debug=True)
+        assert(res['msg'] == "success")
+        assert(("already_exists" in res) == False)
+        regimen = models.TextRegimen.query.filter(models.TextRegimen.regimen_name == "only new messages").all()
+        assert(len(regimen) == 1)
+
+    def test_add_text_regimen_only_old(self):
+        new_text = models.Text(self.org1.id, "New text message 1")
+        new_text1 = models.Text(self.org1.id, "New text message 2")
+        new_text2 = models.Text(self.org2.id, "New message for org 2")
+
+        db.session.add(new_text)
+        db.session.add(new_text1)
+        db.session.add(new_text2)
+        db.session.commit()
+
+        auth = Placeholder()
+        auth.username = self.mgr.id
+
+        request = MyDict()
+        request.authorization = auth
+        text1 = {"day":"monday", "msg":new_text.text_msg, "new_text":False}
+        text2 = {"day":"tuesday", "msg":new_text1.text_msg, "new_text":False}
+
+        request["text_msgs"] = [text1, text2]
+        request["regimen_name"] = "only old messages"
+        res = speranza.api.organizations.add_text_regimen(request, debug=True)
+        regimen = models.TextRegimen.query.filter(models.TextRegimen.regimen_name == "only old messages").all()
+        assert (res['msg'] == 'success')
+        assert(("already_exists" in res) == False)
+        assert(len(regimen) == 1)
+
+    def test_add_text_regimen_new_mistake(self):
+        new_text = models.Text(self.org1.id, "New text message 1")
+        new_text1 = models.Text(self.org1.id, "New text message 2")
+        new_text2 = models.Text(self.org2.id, "New message for org 2")
+
+        db.session.add(new_text)
+        db.session.add(new_text1)
+        db.session.add(new_text2)
+        db.session.commit()
+
+        auth = Placeholder()
+        auth.username = self.mgr.id
+
+        request = MyDict()
+        request.authorization = auth
+        text1 = {"day": "monday", "msg": new_text.text_msg, "new_text": True}
+        text2 = {"day": "tuesday", "msg": new_text1.text_msg, "new_text": False}
+        request["text_msgs"] = [text1, text2]
+        request["regimen_name"] = "only old messages"
+        res = speranza.api.organizations.add_text_regimen(request, debug=True)
+        regimen = models.TextRegimen.query.filter(models.TextRegimen.regimen_name == "only old messages").all()
+        assert (res['msg'] == 'success')
+        assert(("already_exists" in res) == True)
+        assert(len(regimen) == 1)
+        texts = models.Text.query.filter(models.Text.text_msg == new_text.text_msg).all()
+        assert(len(texts) == 1)
+
+        request = MyDict()
+        request.authorization = auth
+        text1 = {"day": "monday", "msg": "New message that doesn't exist", "new_text": False}
+        text2 = {"day": "tuesday", "msg": new_text1.text_msg, "new_text": False}
+        request["text_msgs"] = [text1, text2]
+        request["regimen_name"] = "this should not work"
+        try:
+            res = speranza.api.organizations.add_text_regimen(request, debug=True)
+        except Exception as e:
+            assert (type(e) == UnprocessableEntity), e
+            assert(e.description == "Este mensaje: {0} no existe, por favor intenta otra vez".format(text1["msg"]))
+            print e
+        regimen = models.TextRegimen.query.filter(models.TextRegimen.regimen_name == "this should not work").all()
+        assert(len(regimen) == 0)
+
+    def test_add_text_regimen_exists(self):
+        new_text = models.Text(self.org1.id, "New text message 1")
+        new_text1 = models.Text(self.org1.id, "New text message 2")
+        new_text2 = models.Text(self.org2.id, "New message for org 2")
+
+        db.session.add(new_text)
+        db.session.add(new_text1)
+        db.session.add(new_text2)
+        db.session.commit()
+
+        auth = Placeholder()
+        auth.username = self.mgr.id
+
+        request = MyDict()
+        request.authorization = auth
+        text1 = {"day": "monday", "msg": new_text.text_msg, "new_text": True}
+
+        request = MyDict()
+        request.authorization = auth
+        text1 = {"day": "monday", "msg": "New message that doesn't exist", "new_text": True}
+        request["text_msgs"] = [text1]
+        request["regimen_name"] = "this should not work twice"
+        try:
+            res = speranza.api.organizations.add_text_regimen(request, debug=True)
+            res = speranza.api.organizations.add_text_regimen(request, debug=True)
+        except Exception as e:
+            assert (type(e) == UnprocessableEntity), e
+            assert(e.description == "Ya existe un regimen con este nombre, por favor intenta con otra nombre")
+        regimen = models.TextRegimen.query.filter(models.TextRegimen.regimen_name == "this should not work twice").all()
+        assert(len(regimen) == 1)
+
+    def test_get_text_regimen(self):
+        auth = Placeholder()
+        auth.username = self.mgr.id
+
+        request = MyDict()
+        request.authorization = auth
+        new_regimen = models.TextRegimen(self.org1.id, "new regimen")
+        db.session.add(new_regimen)
+        db.session.commit()
+
+        request["regimen_name"] = new_regimen.regimen_name
+        res = speranza.api.organizations.get_text_regimen(request)
+        assert(res['msg'] == "success")
+        regimen = res["regimen"]
+        assert(regimen.id == new_regimen.id)
+
+    def test_get_text_not_in_org(self):
+        auth = Placeholder()
+        auth.username = self.mgr.id
+
+        request = MyDict()
+        request.authorization = auth
+        new_regimen = models.TextRegimen(self.org1.id, "new regimen")
+        db.session.add(new_regimen)
+        db.session.commit()
+        request["regimen_name"] = new_regimen.regimen_name
+        try:
+            new_regimen.org_id = self.org2.id
+            db.session.commit()
+            res  = speranza.api.organizations.get_text_regimen(request)
+        except Exception as e:
+            assert (type(e) == UnprocessableEntity), e
+            print e
+            assert(e.description == "No hay un regimen con este nombre para este organizacion")
+
+    def test_get_org_text_regimens(self):
+        auth = Placeholder()
+        auth.username = self.mgr.id
+
+        request = MyDict()
+        request.authorization = auth
+
+        res = speranza.api.organizations.get_org_text_regimens(request, debug=True)
+        regimens = res['regimens']
+        assert(len(regimens) == 0)
+        assert (res['msg'] == "success")
+        new_regimen1 = models.TextRegimen(self.org1.id, "new regimen 1")
+        new_regimen2 = models.TextRegimen(self.org1.id, "new regimen 2")
+        db.session.add(new_regimen1)
+        db.session.add(new_regimen2)
+        db.session.commit()
+        res = speranza.api.organizations.get_org_text_regimens(request, debug=True)
+        regimens = res['regimens']
+        assert(len(regimens) == 2)
+        regimen_names = [x.regimen_name for x in regimens]
+        assert(new_regimen1.regimen_name in regimen_names)
+        assert(new_regimen2.regimen_name in regimen_names)
+
+    def test_get_org_texts(self):
+        auth = Placeholder()
+        auth.username = self.mgr.id
+
+        request = MyDict()
+        request.authorization = auth
+        res = speranza.api.organizations.get_org_texts(request, debug=True)
+        texts = res['texts']
+        assert (len(texts) == 0)
+        assert (res['msg'] == "success")
+        new_text1 = models.Text(self.org1.id, "new text 1")
+        new_text2 = models.Text(self.org1.id, "new text 2")
+        db.session.add(new_text1)
+        db.session.add(new_text2)
+        db.session.commit()
+
+        res = speranza.api.organizations.get_org_texts(request, debug=True)
+
+        texts = res['texts']
+        assert (len(texts) == 2)
+        regimen_names = [x.text_msg for x in texts]
+        assert (new_text1.text_msg in regimen_names)
+        assert (new_text2.text_msg in regimen_names)
+
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -7,7 +7,7 @@ from flask import Flask
 import unittest
 import datetime
 
-from speranza.models import Address, Appointment, Manager, Organization, Patient, Text
+from speranza.models import Address, Appointment, Manager, Organization, Patient, Text, TextRegimen
 from speranza.application import db
 
 
@@ -184,5 +184,91 @@ class TestModels(unittest.TestCase):
         text_1 = text_messages[0]
         assert(text_1.id == new_text.id)
         assert(text_1.org_id == self.new_org.id)
+        assert(text_1.text_msg == new_text.text_msg)
+
+    def test_text_regimen(self):
+        db.session.add(self.new_org)
+        db.session.commit()
+
+        new_regimen = TextRegimen(org_id = self.new_org.id, regimen_name = "Test regimen name")
+        db.session.add(new_regimen)
+        db.session.commit()
+
+        assert(new_regimen.id is not None)
+        assert(new_regimen.org_id == self.new_org.id)
+
+        regimens = TextRegimen.query.all()
+        assert(len(regimens) == 1)
+        assert(regimens[0].id == new_regimen.id)
+        assert(regimens[0].org_id == self.new_org.id)
+        assert(regimens[0].regimen_name == new_regimen.regimen_name)
+
+    def test_regimen_text(self):
+        db.session.add(self.new_org)
+        db.session.commit()
+
+        mon_text = Text(org_id=self.new_org.id, text_msg="Mon text message")
+        tue_text = Text(org_id=self.new_org.id, text_msg="tue text message")
+        thur_text = Text(org_id=self.new_org.id, text_msg="Thur text message")
+        sat_text = Text(org_id=self.new_org.id, text_msg="Sat text message")
+        new_regimen = TextRegimen(org_id=self.new_org.id, regimen_name="Test regimen name")
+        db.session.add(mon_text)
+        db.session.add(tue_text)
+        db.session.add(thur_text)
+        db.session.add(sat_text)
+        db.session.add(new_regimen)
+        db.session.commit()
+
+        texts = new_regimen.get_texts()
+        assert(len(texts) == 0)
+
+        regimen_with_texts = TextRegimen(org_id = self.new_org.id, regimen_name="Test regimen with texts", mon_text=mon_text.id, tue_text=tue_text.id,
+                                         thur_text=thur_text.id, sat_text=sat_text.id)
+        db.session.add(regimen_with_texts)
+        db.session.commit()
+        texts = regimen_with_texts.get_texts()
+        assert(len(texts) == 4)
+        assert(thur_text.text_msg in texts.values())
+        assert(mon_text.text_msg in texts.values())
+        assert(tue_text.text_msg in texts.values())
+        assert (sat_text.text_msg in texts.values())
+
+    def test_regimen_add_text(self):
+        db.session.add(self.new_org)
+        db.session.commit()
+
+        new_regimen = TextRegimen(org_id = self.new_org.id, regimen_name="Test regimen name")
+        db.session.add(new_regimen)
+        db.session.commit()
+
+        text_msg = Text(self.new_org.id, "Test message text")
+        db.session.add(text_msg)
+        db.session.commit()
+
+        res = new_regimen.add_text(text_msg.id, "Monday")
+        assert(res == 1)
+
+        regimen_fetch = TextRegimen.query.filter(TextRegimen.id == new_regimen.id).first()
+        assert(regimen_fetch.monday_text == text_msg.id)
+
+        res = new_regimen.add_text(text_msg.id, "monday")
+        assert(res == 1)
+        regimen_fetch = TextRegimen.query.filter(TextRegimen.id == new_regimen.id).first()
+        assert(regimen_fetch.monday_text == text_msg.id)
+
+        res = new_regimen.add_text(text_msg.id, "friiday")
+        assert(res == -1)
+
+        regimen_fetch = TextRegimen.query.filter(TextRegimen.id == new_regimen.id).first()
+        assert(regimen_fetch.friday_text is None)
+
+
+
+
+
+
+
+
+
 
 

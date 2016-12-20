@@ -23,7 +23,6 @@ patient_organization_table = db.Table('patient_organization_table',
                                                 nullable=False),
                                       db.PrimaryKeyConstraint('patient_id', 'org_id'))
 
-
 class Address(db.Model):
     __tablename__ = 'addresses'
 
@@ -244,4 +243,108 @@ class Text(db.Model):
     @property
     def serialize(self):
         return dict(id=self.id, org_id=self.org_id, text_msg=self.text_msg)
+
+class TextRegimen(db.Model):
+    __tablename__ = 'text_regimens'
+
+    id = Column(Integer, primary_key=True)
+    org_id = Column(db.Integer, db.ForeignKey('organizations.id'))
+    regimen_name=Column(String(250), nullable=False)
+    monday_text = Column(db.Integer, db.ForeignKey("texts.id"), nullable=True)
+    tuesday_text = Column(db.Integer, db.ForeignKey("texts.id"), nullable=True)
+    wednesday_text = Column(db.Integer, db.ForeignKey("texts.id"), nullable=True)
+    thursday_text = Column(db.Integer, db.ForeignKey("texts.id"), nullable=True)
+    friday_text = Column(db.Integer, db.ForeignKey("texts.id"), nullable=True)
+    saturday_text = Column(db.Integer, db.ForeignKey("texts.id"), nullable=True)
+    sunday_text = Column(db.Integer, db.ForeignKey("texts.id"), nullable=True)
+
+    def __init__(self, org_id, regimen_name, mon_text=None, tue_text=None, wed_text=None, thur_text=None,
+                 fri_text=None, sat_text=None, sun_text=None):
+
+        self.org_id = org_id
+        self.regimen_name = regimen_name
+        self.monday_text = mon_text
+        self.tuesday_text = tue_text
+        self.wednesday_text = wed_text
+        self.thursday_text = thur_text
+        self.friday_text = fri_text
+        self.saturday_text = sat_text
+        self.sunday_text = sun_text
+
+    def add_text(self, msg_id, day):
+        day = day.lower()
+        if day == 'monday':
+            self.monday_text = msg_id
+        elif day == 'tuesday':
+            self.tuesday_text = msg_id
+        elif day == 'wednesday':
+            self.wednesday_text = msg_id
+        elif day == 'thursday':
+            self.thursday_text = msg_id
+        elif day == 'friday':
+            self.friday_text = msg_id
+        elif day == 'saturday':
+            self.saturday_text = msg_id
+        elif day == 'sunday':
+            self.sunday_text = msg_id
+        else:
+            return -1
+        db.session.commit()
+        return 1
+
+    def get_texts(self):
+        texts = {}
+        if(self.monday_text is not None):
+            mon_text = Text.query.filter(Text.id == self.monday_text).first()
+            texts['monday'] = mon_text.text_msg
+        if(self.tuesday_text is not None):
+            tue_text = Text.query.filter(Text.id == self.tuesday_text).first()
+            texts['tuesday'] = tue_text.text_msg
+        if(self.wednesday_text is not None):
+            wed_text = Text.query.filter(Text.id == self.wednesday_text).first()
+            texts['wednesday'] = wed_text.text_msg
+        if(self.thursday_text is not None):
+            thur_text = Text.query.filter(Text.id == self.thursday_text).first()
+            texts['thursday'] = thur_text.text_msg
+        if (self.friday_text is not None):
+            fri_text = Text.query.filter(Text.id == self.friday_text).first()
+            texts['friday'] = fri_text.text_msg
+        if (self.saturday_text is not None):
+            sat_text = Text.query.filter(Text.id == self.saturday_text).first()
+            texts['friday'] = sat_text.text_msg
+        if (self.sunday_text is not None):
+            sun_text = Text.query.filter(Text.id == self.sunday_text).first()
+            texts['friday'] = sun_text.text_msg
+        return texts
+
+    @property
+    def serialize(self):
+        dict = {}
+        dict['id'] = self.id
+        dict['org_id'] = self.org_id
+        dict['regimen_name'] = self.regimen_name
+        if(self.monday_text is not None):
+            text = Text.query.filter(Text.id == self.monday_text).first()
+            dict['monday_text'] = text.text_msg
+        if(self.tuesday_text is not None):
+            text = Text.query.filter(Text.id == self.tuesday_text).first()
+            dict['tuesday_text'] = text.text_msg
+        if (self.wednesday_text is not None):
+            text = Text.query.filter(Text.id == self.wednesday_text).first()
+            dict['wednesday_text'] = text.text_msg
+        if(self.thursday_text is not None):
+            text = Text.query.filter(Text.id == self.thursday_text).first()
+            dict['thursday_text'] = text.text_msg
+        if(self.friday_text is not None):
+            text = Text.query.filter(Text.id == self.friday_text).first()
+            dict['friday_text'] = text.text_msg
+        if(self.saturday_text is not None):
+            text = Text.query.filter(Text.id == self.saturday_text).first()
+            dict['saturday_text'] = text.text_msg
+        if(self.sunday_text is not None):
+            text = Text.query.filter(Text.id == self.sunday_text).first()
+            dict['sunday_text'] = text.text_msg
+        return dict
+
+
 
