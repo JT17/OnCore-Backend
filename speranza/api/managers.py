@@ -32,6 +32,7 @@ def add_manager(request, debug=False):
 
     requirements = ['firstname', 'lastname', 'password', 'phone_number', 'email']
     if not verify_form_data(requirements, form_data):
+        #print "failed verification of data"
         abort(422, "Necesita mas informaction, intenta otra vez por favor")
     if not verify_new_user(form_data):
         abort(422, "Necesita mas informaction, intenta otra vez por favor")

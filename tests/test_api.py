@@ -769,6 +769,15 @@ class TestApi(unittest.TestCase):
         assert (new_text1.text_msg in regimen_names)
         assert (new_text2.text_msg in regimen_names)
 
+    def test_get_orgs(self):
+        auth = Placeholder()
+        request = MyDict()
+        res = speranza.api.organizations.get_organizations(request, debug=True)
+        orgs = res['orgs']
+        assert(len(orgs) == 2)
+        assert(self.org1 in orgs)
+        assert(self.org2 in orgs)
+
 
 
 if __name__ == '__main__':

@@ -5,6 +5,13 @@ from speranza.api.common import get_form_data
 from speranza.api.verification import verify_form_data
 from speranza.application import db
 
+def get_organizations(request, debug=False):
+    res = {'msg': 'Sorry something went wrong'}
+    all_orgs = Organization.query.all()
+    res['msg'] = 'success'
+    res['orgs'] = all_orgs
+    return res
+
 
 def add_organization(request, debug=False):
     res = {'msg': 'Sorry something went wrong'}
