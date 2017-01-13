@@ -135,15 +135,17 @@ class Manager(db.Model):
     id = db.Column(Integer, primary_key=True)
     firstname = db.Column(String(250), nullable=False)
     lastname = db.Column(String(250), nullable=False)
+    username = db.Column(String(250), nullable=False)
     phone_number = db.Column(String(128), nullable=False)
     email = db.Column(String(250), nullable=False)
     password = db.Column(String(128))
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=True)
     is_admin = db.Column(db.Boolean, nullable=False)
 
-    def __init__(self, firstname, lastname, phone_number, email, password):
+    def __init__(self, firstname, lastname, username, phone_number, email, password):
         self.firstname = firstname
         self.lastname = lastname
+        self.username = username
         self.phone_number = phone_number
         self.email = email
         self.password = pwd_context.encrypt(password)

@@ -19,12 +19,31 @@ def verify_manager_access(patient, auth):
 def verify_password(username, password_or_token):
     mgr = Manager.verify_auth_token(password_or_token)
     if not mgr:
-        mgr = Manager.query.filter(Manager.id == username).first()
+        mgr = Manager.query.filter(Manager.username == username).first()
         if not mgr or not mgr.verify_password(password_or_token):
             return False
     g.manager = mgr
     return True
 
+def login_manager(request, debug=False):
+    res={'msg':'Something has gone wrong'}
+    form_data = get_form_data(request, debug)
+    requirements = ['username', 'password']
+    if not verify_form_data(requirements, form_data):
+        abort(422, "Necesita mas informacion, intenta otra vez por favor")
+    not_liar = verify_password(form_data['username'], form_data['password'])
+    if(not_liar == False):
+        abort(401, "Contraseña incorrecta")
+    else:
+        manager = Manager.query.filter(Manager.username == form_data['username'])
+        if(manager is not None):
+            res['msg'] = 'success'
+        else:
+            abort(422, "Hay una problema, intenta otra vez por favor")
+        if(manager.org_id is None):
+            res['org_exists'] = False
+        else:
+            res['org_id'] = manager.org_id
 
 def add_manager(request, debug=False):
     res = {'msg': 'Something has gone wrong'}
@@ -33,9 +52,9 @@ def add_manager(request, debug=False):
     requirements = ['firstname', 'lastname', 'password', 'phone_number', 'email']
     if not verify_form_data(requirements, form_data):
         #print "failed verification of data"
-        abort(422, "Necesita mas informaction, intenta otra vez por favor")
+        abort(422, "Necesita mas informacion, intenta otra vez por favor")
     if not verify_new_user(form_data):
-        abort(422, "Necesita mas informaction, intenta otra vez por favor")
+        abort(422, "Necesita mas informacion, intenta otra vez por favor")
 
     phone_number = sanitize_phone_number(form_data['phone_number'])
     manager = Manager(form_data['firstname'], form_data['lastname'],
