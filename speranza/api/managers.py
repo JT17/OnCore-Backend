@@ -49,22 +49,24 @@ def add_manager(request, debug=False):
     res = {'msg': 'Something has gone wrong'}
     form_data = get_form_data(request, debug)
 
-    requirements = ['firstname', 'lastname', 'password', 'phone_number', 'email']
+    requirements = ['username','firstname', 'lastname', 'password', 'phone_number', 'email']
     if not verify_form_data(requirements, form_data):
         #print "failed verification of data"
         abort(422, "Necesita mas informacion, intenta otra vez por favor")
     if not verify_new_user(form_data):
         abort(422, "Necesita mas informacion, intenta otra vez por favor")
-
+    username_exists = Manager.query.filter(Manager.username == form_data['username']).first()
+    if(username_exists is not None):
+        abort(422, "Nombre de usuario ya tomado, intenta otra vez por favor")
     phone_number = sanitize_phone_number(form_data['phone_number'])
-    manager = Manager(form_data['firstname'], form_data['lastname'],
+    manager = Manager(form_data['firstname'], form_data['lastname'], form_data['username'],
                       phone_number, form_data['email'], form_data['password'])
     try:
         db.session.add(manager)
         db.session.commit()
         if not debug:
             mp.track(manager.id, "Manager added",
-                     properties={'firstname': form_data['firstname'], 'lastname': form_data['lastname']})
+                     properties={'firstname': form_data['firstname'], 'lastname': form_data['lastname'], 'username':form_data['username']})
     except ValueError as err:
         db.session.flush()
         abort(500, str(err.args))
