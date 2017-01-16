@@ -58,8 +58,8 @@ class TestApi(unittest.TestCase):
         db.session.add(self.org2)
         db.session.commit()
 
-        self.mgr = models.Manager("test", "mgr", 12345, "abc@abc.com", "pwd")
-        self.mgr1 = models.Manager("test", "mgr1", 12345, "blah@abc.com", "pwd")
+        self.mgr = models.Manager("test", "mgr", "username0", 12345, "abc@abc.com", "pwd")
+        self.mgr1 = models.Manager("test", "mgr1", "username1", 12345, "blah@abc.com", "pwd")
 
         self.mgr.org_id = self.org1.id
         self.mgr1.org_id = self.org2.id
@@ -268,6 +268,7 @@ class TestApi(unittest.TestCase):
         request = MyDict()
         request['firstname'] = "Test"
         request['lastname'] = "Manager"
+        request['username'] = 'new_username'
         request['email'] = "test@mail.com"
         request['password'] = "password"
         request['phone_number'] = "12345567"
@@ -778,7 +779,24 @@ class TestApi(unittest.TestCase):
         assert(self.org1 in orgs)
         assert(self.org2 in orgs)
 
+    def test_manager_signin(self):
+        request =  MyDict()
+        request["username"] = "username0"
+        request["password"] = "pwd"
+        self.mgr.org_id = None
+        db.session.commit()
+        res = speranza.api.managers.login_manager(request, debug=True)
 
+        assert(res['msg'] == 'success')
+        assert(res['org_exists'] == False)
+
+        self.mgr.org_id = 1
+        db.session.commit()
+        res = speranza.api.managers.login_manager(request, debug=True)
+
+        assert (res['msg'] == 'success')
+        assert (res['org_exists'] == True)
+        assert(res['org_id'] == 1)
 
 if __name__ == '__main__':
     unittest.main()

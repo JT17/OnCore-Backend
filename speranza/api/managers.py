@@ -22,7 +22,6 @@ def verify_password(username, password_or_token):
         mgr = Manager.query.filter(Manager.username == username).first()
         if not mgr or not mgr.verify_password(password_or_token):
             return False
-    g.manager = mgr
     return True
 
 def login_manager(request, debug=False):
@@ -35,7 +34,7 @@ def login_manager(request, debug=False):
     if(not_liar == False):
         abort(401, "Contraseña incorrecta")
     else:
-        manager = Manager.query.filter(Manager.username == form_data['username'])
+        manager = Manager.query.filter(Manager.username == form_data['username']).first()
         if(manager is not None):
             res['msg'] = 'success'
         else:
@@ -43,7 +42,9 @@ def login_manager(request, debug=False):
         if(manager.org_id is None):
             res['org_exists'] = False
         else:
+            res['org_exists'] = True
             res['org_id'] = manager.org_id
+        return res
 
 def add_manager(request, debug=False):
     res = {'msg': 'Something has gone wrong'}

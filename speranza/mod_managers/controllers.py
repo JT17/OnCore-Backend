@@ -14,6 +14,13 @@ def add_manager():
     else:
         abort(500, res['msg'])
 
+@mod_managers.route('/api/signin', methods=['GET', 'POST'])
+def signin():
+    res = speranza.api.managers.login_manager(request)
+    if res['msg'] == 'success':
+        return jsonify(status='200', value=res['msg'], manager_id=res['manager_id'])
+    else:
+        abort(500, res['msg'])
 
 @mod_managers.route('/api/edit_manager', methods=['GET', 'POST'])
 @auth.login_required
