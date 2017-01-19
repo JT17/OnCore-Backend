@@ -32,7 +32,7 @@ def login_manager(request, debug=False):
         abort(422, "Necesita mas informacion, intenta otra vez por favor")
     not_liar = verify_password(form_data['username'], form_data['password'])
     if(not_liar == False):
-        abort(401, "Contraseña incorrecta")
+        abort(401, "Contrasena incorrecta")
     else:
         manager = Manager.query.filter(Manager.username == form_data['username']).first()
         if(manager is not None):
