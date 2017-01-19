@@ -37,6 +37,7 @@ def login_manager(request, debug=False):
         manager = Manager.query.filter(Manager.username == form_data['username']).first()
         if(manager is not None):
             res['msg'] = 'success'
+            res['manager_id']  = manager.id
         else:
             abort(422, "Hay una problema, intenta otra vez por favor")
         if(manager.org_id is None):
