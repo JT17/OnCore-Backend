@@ -7,8 +7,10 @@ mod_orgs = Blueprint('organizations', __name__)
 
 
 @mod_orgs.route('/api/get_organizations', methods=['GET', 'POST'])
-def add_manager():
+def get_organizations():
+    print "what the fuck"
     res = speranza.api.organizations.get_organizations(request)
+    print res
     if res['msg'] == 'success':
         return jsonify(status='200', value=res['msg'], orgs=res['orgs'])
     else:
