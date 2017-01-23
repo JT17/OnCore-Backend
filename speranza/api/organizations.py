@@ -8,8 +8,11 @@ from speranza.application import db
 def get_organizations(request, debug=False):
     res = {'msg': 'Sorry something went wrong'}
     all_orgs = Organization.query.all()
+    serialized_orgs = []
+    for org in all_orgs:
+        serialized_orgs.append(org.serialize)
     res['msg'] = 'success'
-    res['orgs'] = all_orgs
+    res['orgs'] = serialized_orgs
     return res
 
 
@@ -28,8 +31,8 @@ def add_organization(request, debug=False):
             abort(401, "La identificacion del gerente es incorrecto")
     else:
         abort(401, "No hay identificacion para el gerente")
-    org_exists = Organization.query.filter(Organization.org_name == form_data['org_name'])
-    if org_exists is not None:
+    org_exists = Organization.query.filter(Organization.org_name == form_data['org_name']).all()
+    if len(org_exists) != 0:
         abort(422, "Ya existe un organizacion con este nombre, intenta otra vez por favor")
 
     if 'org_email' in form_data:
@@ -39,10 +42,11 @@ def add_organization(request, debug=False):
     db.session.add(new_org)
     db.session.commit()
 
-    # TODO assumes that the first person is going to be an admin. up for debate in the future
     new_org.add_admin(request.authorization.username)
+    db.session.commit()
     res['msg'] = "success"
     res['org'] = new_org.serialize
+    res['org_id'] = new_org.id
     return res
 
 

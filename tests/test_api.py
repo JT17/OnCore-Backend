@@ -798,5 +798,29 @@ class TestApi(unittest.TestCase):
         assert (res['org_exists'] == True)
         assert(res['org_id'] == 1)
 
+    def test_add_organization(self):
+        request = MyDict()
+        request['org_name'] = 'new_org'
+
+        auth = Placeholder()
+        auth.username = self.mgr.id
+        request.authorization = auth
+
+        res = speranza.api.organizations.add_organization(request, debug=True)
+        assert (res['msg'] == 'success')
+        exists = models.Organization.query.filter(models.Organization.org_name == 'new_org').all()
+        assert(len(exists) == 1)
+        assert(len(exists[0].admins) == 1)
+        assert (exists[0].admins[0].id) == self.mgr.id, exists[0].admins
+        try:
+            res = speranza.api.organizations.add_organization(request, debug=True)
+        except Exception as e:
+            assert (type(e) == UnprocessableEntity), e
+            print e
+            assert(e.description == "Ya existe un organizacion con este nombre, intenta otra vez por favor")
+
+        exists = models.Organization.query.filter(models.Organization.org_name == 'new_org').all()
+        assert(len(exists) == 1)
+
 if __name__ == '__main__':
     unittest.main()
