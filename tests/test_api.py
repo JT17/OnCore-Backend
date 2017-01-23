@@ -561,6 +561,7 @@ class TestApi(unittest.TestCase):
         # debug_emails = ["jonathan.tiao17@gmail.com"]
         res = speranza.api.managers.ask_for_org_access(request, debug=True)
         assert res['msg'] == 'success'
+        assert(self.mgr.pending_access == True)
 
     def test_add_text_regimen_only_new(self):
         new_text = models.Text(self.org1.id, "New text message 1")
@@ -789,6 +790,7 @@ class TestApi(unittest.TestCase):
 
         assert(res['msg'] == 'success')
         assert(res['org_exists'] == False)
+        assert(res['pending'] == False)
 
         self.mgr.org_id = 1
         db.session.commit()
@@ -797,6 +799,7 @@ class TestApi(unittest.TestCase):
         assert (res['msg'] == 'success')
         assert (res['org_exists'] == True)
         assert(res['org_id'] == 1)
+        assert(res['pending'] == False)
 
     def test_add_organization(self):
         request = MyDict()
@@ -814,6 +817,16 @@ class TestApi(unittest.TestCase):
         assert (exists[0].admins[0].id) == self.mgr.id, exists[0].admins
         try:
             res = speranza.api.organizations.add_organization(request, debug=True)
+            assert(1 == 0)
+        except Exception as e:
+            assert (type(e) == UnprocessableEntity), e
+            print e
+            assert(e.description == "Ya existe un organizacion con este nombre, intenta otra vez por favor")
+
+        request['org_name'] = 'NEW_org'
+        try:
+            res = speranza.api.organizations.add_organization(request, debug=True)
+            assert(1 == 0)
         except Exception as e:
             assert (type(e) == UnprocessableEntity), e
             print e

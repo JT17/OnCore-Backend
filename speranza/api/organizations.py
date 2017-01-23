@@ -31,8 +31,9 @@ def add_organization(request, debug=False):
             abort(401, "La identificacion del gerente es incorrecto")
     else:
         abort(401, "No hay identificacion para el gerente")
+    org_exists1 = Organization.query.filter(Organization.org_name.ilike(form_data['org_name'])).all()
     org_exists = Organization.query.filter(Organization.org_name == form_data['org_name']).all()
-    if len(org_exists) != 0:
+    if len(org_exists) != 0 or len(org_exists1) != 0:
         abort(422, "Ya existe un organizacion con este nombre, intenta otra vez por favor")
 
     if 'org_email' in form_data:
@@ -73,6 +74,7 @@ def add_manager_to_organization(request, debug=False):
 
     org.add_manager(mgr_id)
     manager.set_org(form_data['org_id'])
+    manager.pending_access = False
     db.session.commit()
     res['msg'] = "success"
     return res

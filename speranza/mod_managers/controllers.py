@@ -19,7 +19,7 @@ def signin():
     res = speranza.api.managers.login_manager(request)
     if res['msg'] == 'success':
         if(res['org_exists'] == False):
-            return  jsonify(stauts='200', value=res['msg'], manager_id=res['manager_id'], org_id="None")
+            return  jsonify(status='200', value=res['msg'], manager_id=res['manager_id'], org_id="None", pending=res["pending"])
         return jsonify(status='200', value=res['msg'], manager_id = res['manager_id'], org_id=res['org_id'])
     else:
         abort(500, res['msg'])

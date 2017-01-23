@@ -141,6 +141,7 @@ class Manager(db.Model):
     password = db.Column(String(128))
     org_id = db.Column(db.Integer, db.ForeignKey('organizations.id'), nullable=True)
     is_admin = db.Column(db.Boolean, nullable=False)
+    pending_access = db.Column(db.Boolean, nullable=False)
 
     def __init__(self, firstname, lastname, username, phone_number, email, password):
         self.firstname = firstname
@@ -151,6 +152,7 @@ class Manager(db.Model):
         self.password = pwd_context.encrypt(password)
         self.org_id = None
         self.is_admin = False
+        self.pending_access = False
 
     # To add a manager to an org, they first have to have access.
     # They have access when they've already been added to the org which is done by the link

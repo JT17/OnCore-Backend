@@ -45,6 +45,7 @@ def login_manager(request, debug=False):
         else:
             res['org_exists'] = True
             res['org_id'] = manager.org_id
+        res['pending'] = manager.pending_access
         return res
 
 def add_manager(request, debug=False):
@@ -93,6 +94,9 @@ def ask_for_org_access(request, debug=False):
         mgr = Manager.query.filter(Manager.id == mgr_id).first()
         if mgr is None:
             abort(422, "La identificion del gerente es incorrecto")
+        else:
+            mgr.pending_access = True
+            db.session.commit()
     else:
         abort(401, "No hay identificacion para el gerente")
 
