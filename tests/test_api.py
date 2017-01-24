@@ -815,6 +815,7 @@ class TestApi(unittest.TestCase):
         assert(len(exists) == 1)
         assert(len(exists[0].admins) == 1)
         assert (exists[0].admins[0].id) == self.mgr.id, exists[0].admins
+        assert(self.mgr.org_id == exists[0].id), self.mgr.org_id
         try:
             res = speranza.api.organizations.add_organization(request, debug=True)
             assert(1 == 0)

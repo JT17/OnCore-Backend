@@ -26,7 +26,7 @@ def add_organization(request, debug=False):
         abort(422, "Necesita mas informaction, intenta otra vez por favor")
     manager_id = request.authorization.username
     if manager_id is not None:
-        manager = Manager.query.filter(Manager.id == manager_id)
+        manager = Manager.query.filter(Manager.id == manager_id).first()
         if manager is None:
             abort(401, "La identificacion del gerente es incorrecto")
     else:
@@ -43,6 +43,7 @@ def add_organization(request, debug=False):
     db.session.add(new_org)
     db.session.commit()
 
+    manager.org_id = new_org.id
     new_org.add_admin(request.authorization.username)
     db.session.commit()
     res['msg'] = "success"
