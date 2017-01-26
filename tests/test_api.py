@@ -835,6 +835,31 @@ class TestApi(unittest.TestCase):
 
         exists = models.Organization.query.filter(models.Organization.org_name == 'new_org').all()
         assert(len(exists) == 1)
+    def test_get_manager_appts(self):
+        request = MyDict()
+        request['org_name'] = 'new_org'
+
+        auth = Placeholder()
+        auth.username = self.mgr.id
+        request.authorization = auth
+
+        today = time.time()
+        timestamp = datetime.datetime.utcfromtimestamp(int(float(today)))
+
+        apt1 = speranza.models.Appointment(self.pt1.id, self.mgr.id, timestamp, "test")
+        apt2 = speranza.models.Appointment(self.pt2.id, self.mgr.id, timestamp, "test2")
+
+        db.session.add(apt1)
+        db.session.add(apt2)
+        db.session.commit()
+
+        res = speranza.api.appointments.get_manager_appts(request, True)
+        assert(res['msg'] == 'success')
+        appts = res['appts']
+        assert (len(appts) == 2)
+        print appts
+        assert(apt1.serialize() in appts)
+
 
 if __name__ == '__main__':
     unittest.main()

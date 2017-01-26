@@ -73,8 +73,6 @@ class Appointment(db.Model):
             'checkout': self.checkout
         }
 
-    def __repr__(self):
-        return '<User %r>' % self.user_id
 
 
 class Patient(db.Model):

@@ -20,12 +20,11 @@ def get_patient_appts():
 @mod_appointments.route('/api/get_manager_appts', methods=['GET', 'POST'])
 @auth.login_required
 def get_manager_appts():
-    appts = speranza.api.appointments.get_manager_appts(request)
-    ser_appts = []
-    for val in appts:
-        ser_appt = {'user_id': val.user_id, 'date': val.date, 'appt_type': val.appt_type, 'checkin': val.checkin}
-        ser_appts.append(ser_appt)
-    return jsonify(appts=ser_appts)
+    res = speranza.api.appointments.get_manager_appts(request)
+    if res['msg'] == 'success':
+        return jsonify(status='200', value=res['msg'], appts=res['appts'])
+    else:
+        abort(500, res['msg'])
 
 
 # requires user_id, date, appt_type in request form

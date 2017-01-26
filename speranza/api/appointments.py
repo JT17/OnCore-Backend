@@ -4,7 +4,7 @@ import sqlalchemy.exc
 
 from speranza.api.common import get_form_data
 from speranza.api.verification import verify_form_data, verify_patient_exists, verify_manager_access
-from speranza.models import Appointment, Patient
+from speranza.models import Appointment, Patient, Manager
 from speranza.util.mixpanel_logging import mp
 from speranza.application import db
 
@@ -55,9 +55,26 @@ def get_patient_appts(request):
 
 
 # TODO
-def get_manager_appts(request):
-    print request
-    pass
+def get_manager_appts(request, debug=False):
+    res = {'msg': 'Sorry something went wrong'}
+    form_data = get_form_data(request, debug)
+    requirements = []
+    if verify_form_data(requirements, form_data):
+        manager_id = request.authorization.username
+
+        manager_exists = Manager.query.filter(Manager.id == manager_id).first()
+        if manager_exists is None:
+            abort(422, "La identificacion del gerente es incorrecto, intenta otra vez por favor")
+        else:
+            appts = Appointment.query.filter(Appointment.manager_id == manager_id).all()
+            appt_list = []
+            for appt in appts:
+                appt_list.append(appt.serialize())
+            res['appts'] = appt_list
+            res['msg'] = 'success'
+        return res
+    else:
+        abort(422, "Necesitamos mas informacion, intenta otra vez por favor")
 
 
 def add_appt(request, debug=False):
