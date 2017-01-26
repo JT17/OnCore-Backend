@@ -3,6 +3,7 @@
 from itsdangerous import BadSignature, SignatureExpired, TimedJSONWebSignatureSerializer as Serializer
 from passlib.apps import custom_app_context as pwd_context
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from datetime import timedelta, datetime
 
 from speranza.application import application, db
 
@@ -64,14 +65,21 @@ class Appointment(db.Model):
 
     def serialize(self):
         """Return object data in easily serializable format"""
-        return {
-            'id': self.id,
-            'patient_id': self.patient_id,
-            'date': self.date,
-            'appt_type': self.appt_type,
-            'checkin': self.checkin,
-            'checkout': self.checkout
-        }
+        timestamp = (self.date - datetime(1970, 1, 1)).total_seconds()
+        patient = Patient.query.filter(Patient.id == self.patient_id).first()
+        if patient is None:
+            return None
+        else:
+            patient_name = patient.firstname + " " + patient.lastname
+            return {
+                'id': self.id,
+                'patient_id': self.patient_id,
+                'date': timestamp,
+                'appt_type': self.appt_type,
+                'checkin': self.checkin,
+                'checkout': self.checkout,
+                'patient_name':patient_name
+            }
 
 
 
