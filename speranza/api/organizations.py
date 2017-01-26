@@ -103,8 +103,9 @@ def add_text_regimen(request, debug=False):
 
     regimen_texts = {}
     for text in form_data['text_msgs']:
+        print text
         text_exists = Text.query.filter(Text.text_msg == text['msg']).first()
-        if(text['new_text'] == True):
+        if( (text['new_text'] == "True") or (text['new_text'] == True)):
             if(text_exists is not None):
                 res['already_exists'] = "Ya existe un mensaje con este informacion: {0}. " \
                                         "En la futura, no es necesario anadir el mismo mensaje otra vez".format(text['msg'])
@@ -114,12 +115,12 @@ def add_text_regimen(request, debug=False):
                 db.session.add(new_text)
                 regimen_texts[text['day']] = new_text
         else:
+
             if(text_exists is None):
                 abort(422, "Este mensaje: {0} no existe, por favor intenta otra vez".format(text['msg']))
             regimen_texts[text['day']] = text_exists
     db.session.commit()
-
-    new_regimen = TextRegimen(manager_org_id, request["regimen_name"])
+    new_regimen = TextRegimen(manager_org_id, form_data["regimen_name"])
     for day, text in regimen_texts.iteritems():
         if(text.id is None):
             abort(422, "Tenemos una problema, por favor intenta otra vez")
@@ -170,7 +171,10 @@ def get_org_text_regimens(request, debug=False):
         abort(422, "Este gerente no esta en un organizacion, por favor intenta con otra gerente")
 
     regimens = TextRegimen.query.filter(TextRegimen.org_id == manager_org_id).all()
-    res['regimens'] = regimens
+    serialized_regimens = []
+    for regimen in regimens:
+        serialized_regimens.append(regimen.serialize)
+    res['regimens'] = serialized_regimens
     res['msg'] = "success"
     return res
 
