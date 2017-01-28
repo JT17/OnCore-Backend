@@ -139,8 +139,9 @@ def edit_patient(request):
 def add_patient(request, debug=False):
     res = {'msg': 'something went wrong sorry'}
     form_data = get_form_data(request, debug)
-    required_args = ['firstname', 'lastname', 'phone_number', 'contact_number', 'dob', 'gov_id', 'city_name']
+    required_args = ['firstname', 'lastname', 'phone_number', 'dob', 'gov_id', 'city_name']
     if not verify_form_data(required_args, form_data):
+        print "not enough info"
         abort(422, "Necesita mas informaction, intenta otra vez por favor")
     verify_new_user(form_data)
     patient_addr = ''
@@ -159,20 +160,23 @@ def add_patient(request, debug=False):
             # right now storing everything as a datetime, but we need to be consistent about this
             # dob = datetime.datetime.utcfromtimestamp(float(form_data['dob']));
             patient_phone_number = sanitize_phone_number(form_data['phone_number'])
-            patient_contact_number = sanitize_phone_number(form_data['contact_number'])
-            patient = Patient(firstname=form_data['firstname'],
-                              lastname=form_data['lastname'],
-                              phone_number=patient_phone_number,
-                              contact_number=patient_contact_number,
-                              address_id=patient_addr.id,
-                              dob=form_data['dob'],
-                              gov_id=form_data['gov_id'])
-
-            message = "Gracias para unir Speranza Health"
-
-            r = send_message(message, patient.contact_number, debug)
-            print r
-
+            if "contact_number" in form_data:
+                patient_contact_number = sanitize_phone_number(form_data['contact_number'])
+                patient = Patient(firstname=form_data['firstname'],
+                                  lastname=form_data['lastname'],
+                                  phone_number=patient_phone_number,
+                                  contact_number=patient_contact_number,
+                                  address_id=patient_addr.id,
+                                  dob=form_data['dob'],
+                                  gov_id=form_data['gov_id'])
+            else:
+                patient = Patient(firstname=form_data['firstname'],
+                                  lastname=form_data['lastname'],
+                                  phone_number=patient_phone_number,
+                                  contact_number=None,
+                                  address_id=patient_addr.id,
+                                  dob=form_data['dob'],
+                                  gov_id=form_data['gov_id'])
             # add patient to organization
             manager_org = Organization.query.filter(Organization.id == manager.org_id).first()
             if manager_org:
@@ -191,7 +195,12 @@ def add_patient(request, debug=False):
 
             res['msg'] = 'success'
             res['patient_id'] = patient.id
-            res['patient_contact_number'] = patient.contact_number
+            res['patient_phone_number'] = patient.phone_number
+            res['patient_name'] = patient.firstname + " " + patient.lastname
+            res['last_appt_details'] = "Nunca ha tenido una cita"
+            message = "Gracias para unir Speranza Health"
+            r = send_message(message, patient.phone_number, debug)
+
             # print res
             return res
 

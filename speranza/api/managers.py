@@ -54,12 +54,14 @@ def add_manager(request, debug=False):
 
     requirements = ['username','firstname', 'lastname', 'password', 'phone_number', 'email']
     if not verify_form_data(requirements, form_data):
-        #print "failed verification of data"
+        print "failed verification of data"
         abort(422, "Necesita mas informacion, intenta otra vez por favor")
     if not verify_new_user(form_data):
+        print "need more info"
         abort(422, "Necesita mas informacion, intenta otra vez por favor")
     username_exists = Manager.query.filter(Manager.username == form_data['username']).first()
     if(username_exists is not None):
+        print "username exists"
         abort(422, "Nombre de usuario ya tomado, intenta otra vez por favor")
     phone_number = sanitize_phone_number(form_data['phone_number'])
     manager = Manager(form_data['firstname'], form_data['lastname'], form_data['username'],

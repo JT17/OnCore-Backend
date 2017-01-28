@@ -90,7 +90,7 @@ class Patient(db.Model):
     firstname = Column(String(250), nullable=False)
     lastname = Column(String(250), nullable=False)
     phone_number = Column(String(250), nullable=False)
-    contact_number = Column(String(250), nullable=False)
+    contact_number = Column(String(250), nullable=True)
     address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True)
     dob = Column(String(250), nullable=False)
     gov_id = Column(Integer, nullable=False)

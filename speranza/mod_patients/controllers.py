@@ -11,8 +11,8 @@ mod_patients = Blueprint('patients', __name__)
 def add_patient():
     res = speranza.api.patients.add_patient(request)
     if res['msg'] == "success":
-        return jsonify(status="200", value=res['msg'], patient_id=res['patient_id'],
-                       patient_contact_number=res['patient_contact_number'])
+        return jsonify(status="200", value=res['msg'], patient_id=res['patient_id'], patient_name = res['patient_name'],
+                       last_appt_details=res['last_appt_details'], phone_number=res['patient_phone_number'])
     else:
         abort(500)
 
