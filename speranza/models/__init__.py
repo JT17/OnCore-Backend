@@ -94,6 +94,7 @@ class Patient(db.Model):
     address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True)
     dob = Column(String(250), nullable=False)
     gov_id = Column(Integer, nullable=False)
+    text_regimen_id = Column(Integer, ForeignKey('text_regimens.id'), nullable=True)
     organizations = db.relationship('Organization', secondary=patient_organization_table, backref='patients')
 
     def __init__(self, firstname, lastname, phone_number, contact_number,
@@ -105,6 +106,8 @@ class Patient(db.Model):
         self.address_id = address_id
         self.dob = dob
         self.gov_id = gov_id
+        
+
 
     @property
     def serialize(self):
@@ -115,7 +118,8 @@ class Patient(db.Model):
             'lastname': self.lastname,
             'phone_number': self.phone_number,
             'dob': self.dob,
-            'gov_id': self.gov_id
+            'gov_id': self.gov_id,
+            'regimen_id':self.text_regimen_id
         }
 
     def add_to_org(self, org_id):

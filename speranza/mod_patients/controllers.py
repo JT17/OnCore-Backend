@@ -44,7 +44,7 @@ def delete_patient():
 def find_patient():
     res = speranza.api.patients.find_patient(request)
     if res['msg'] == "success":
-        return jsonify(status="200", value=res['msg'], patient_id=res['patient_id'],
-                       patient_contact_number=res['patient_contact_number'])
+        print res['patients']
+        return jsonify(status="200", value=res['msg'], patients = res['patients'])
     else:
         abort(500)
