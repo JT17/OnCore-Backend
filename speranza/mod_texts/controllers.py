@@ -32,3 +32,12 @@ def get_org_text_regimens():
         return jsonify(status='200', value=res['msg'], text_regimens = res['regimens'])
     else:
         abort(500, res['msg'])
+
+@mod_texts.route('/api/get_org_texts', methods=['GET', 'POST'])
+@auth.login_required
+def get_org_texts():
+    res = speranza.api.organizations.get_org_texts(request)
+    if res['msg'] == 'success':
+        return jsonify(status='200', value=res['msg'], texts = res['texts'])
+    else:
+        abort(500, res['msg'])

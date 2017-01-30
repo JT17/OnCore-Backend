@@ -106,7 +106,7 @@ class Patient(db.Model):
         self.address_id = address_id
         self.dob = dob
         self.gov_id = gov_id
-        
+
 
 
     @property

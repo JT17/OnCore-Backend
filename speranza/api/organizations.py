@@ -191,6 +191,9 @@ def get_org_texts(request, debug=False):
         abort(422, "Este gerente no esta en un organizacion, por favor intenta con otra gerente")
 
     texts = Text.query.filter(Text.org_id == manager_org_id).all()
-    res['texts'] = texts
+    ser_texts = []
+    for text in texts:
+        ser_texts.append(text.serialize)
+    res['texts'] = ser_texts
     res['msg'] = "success"
     return res
