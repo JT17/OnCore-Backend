@@ -1,9 +1,11 @@
 from flask import abort
 
-from speranza.models import Organization, Manager, TextRegimen, Text
+from speranza.models import Organization, Manager, TextRegimen, Text, Appointment
 from speranza.api.common import get_form_data
 from speranza.api.verification import verify_form_data
 from speranza.application import db
+
+import json
 
 def get_organizations(request, debug=False):
     res = {'msg': 'Sorry something went wrong'}
@@ -196,4 +198,24 @@ def get_org_texts(request, debug=False):
         ser_texts.append(text.serialize)
     res['texts'] = ser_texts
     res['msg'] = "success"
+    return res
+
+def get_org_appt_types(request, debug=False):
+    res = {'msg':'Sorry something went wrong'}
+    mgr_id = request.authorization.username
+    if mgr_id is None:
+        abort(401, "No hay identificaion para el gerente")
+    manager = Manager.query.filter(Manager.id == mgr_id).first()
+    if manager is None:
+        abort(401, "La identifacion del gerente es incorecto")
+    manager_org_id = manager.org_id
+    if manager_org_id is None:
+        abort(422, "Este gerente no esta en un organizacion, por favor intenta con otra gerente")
+
+    values = db.engine.execute("SELECT DISTINCT appt_type FROM appointments INNER JOIN managers ON "
+                               "appointments.manager_id == managers.id WHERE managers.org_id = :manager_org_id", manager_org_id=manager_org_id)
+
+    appt_types = [val.appt_type for val in values]
+    res['msg'] = 'success'
+    res['appt_types'] = appt_types
     return res

@@ -860,6 +860,33 @@ class TestApi(unittest.TestCase):
         print appts
         assert(apt1.serialize() in appts)
 
+    def test_get_appt_types(self):
+        request = MyDict()
+        auth = Placeholder()
+        auth.username = self.mgr.id
+        request.authorization = auth
+        today_ts = datetime.datetime.now()
+        appt1 = models.Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
+        appt2 = models.Appointment(self.pt2.id, self.mgr1.id, today_ts, "blah2")
+        appt3 = models.Appointment(self.pt3.id, self.mgr.id, today_ts, "blah")
+        db.session.add(appt1)
+        db.session.add(appt2)
+        db.session.add(appt3)
+        db.session.commit()
+
+        res = speranza.api.organizations.get_org_appt_types(request, debug=True)
+        appt_types = res['appt_types']
+
+        assert(len(appt_types) == 1)
+
+        update_row_appt = models.Appointment.query.filter(models.Appointment.id == appt3.id).first()
+        update_row_appt.appt_type = "blah1"
+        db.session.commit()
+
+        res = speranza.api.organizations.get_org_appt_types(request, debug=True)
+        appt_types = res['appt_types']
+        print appt_types
+        assert (len(appt_types) == 2)
 
 if __name__ == '__main__':
     unittest.main()
