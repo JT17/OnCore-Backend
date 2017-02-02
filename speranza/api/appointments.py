@@ -4,7 +4,7 @@ import sqlalchemy.exc
 
 from speranza.api.common import get_form_data
 from speranza.api.verification import verify_form_data, verify_patient_exists, verify_manager_access
-from speranza.models import Appointment, Patient, Manager
+from speranza.models import Appointment, Patient, Manager, SurveyResult
 from speranza.util.mixpanel_logging import mp
 from speranza.application import db
 
@@ -172,7 +172,7 @@ def delete_appt(request, debug=False):
 def checkin_out(request, checkin=True, debug=False):
     res = {'msg': 'Sorry something went wrong'}
     form_data = get_form_data(request, debug)
-    requirements = ['user_id', 'date']
+    requirements = ['user_id', 'appt_id', 'survey_results']
     if verify_form_data(requirements, form_data):
         if not verify_patient_exists(form_data['user_id']):
             abort(422, "La identificacion del paciente es incorrecto")
@@ -180,9 +180,8 @@ def checkin_out(request, checkin=True, debug=False):
             abort(401, "La identificacion del gerente es incorrecto")
 
         try:
-            timestamp = datetime.datetime.utcfromtimestamp(float(form_data['date']))
-            appt = Appointment.query.filter(Appointment.patient_id == form_data['user_id']).filter(
-                Appointment.date == timestamp).first()
+            #timestamp = datetime.datetime.utcfromtimestamp(float(form_data['date']))
+            appt = Appointment.query.filter(Appointment.id == form_data['appt_id']).first()
             if appt is None:
                 abort(422, "La fecha es incorrecto, intenta otra vez por favor")
             if checkin:
@@ -197,10 +196,17 @@ def checkin_out(request, checkin=True, debug=False):
             res['msg'] = 'success'
             if not debug:
                 if checkin:
-                    mp.track(form_data['user_id'], "Patient checked in", properties={'date': timestamp})
+                    mp.track(form_data['user_id'], "Patient checked in", properties={'appt_id': form_data['appt_id']})
                 else:
-                    mp.track(form_data['user_id'], "Patient checked out", properties={'date': timestamp})
+                    mp.track(form_data['user_id'], "Patient checked out", properties={'appt_id': form_data['appt_id']})
+            manager = Manager.query.filter(Manager.id == request.authorization.username).first()
 
+            #this should never be the case but it isn't worth failing if they've gotten here and no idea why this would ever fail
+            if(manager.org_id is not None):
+                for res in form_data['survey_results']:
+                    new_res = SurveyResult(manager.org_id, res['question'], res['result'])
+                    db.session.add(new_res)
+                db.session.commit()
             return res
         except sqlalchemy.exc.DatabaseError, e:
             abort(500, str(e))

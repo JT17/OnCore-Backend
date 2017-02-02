@@ -360,5 +360,15 @@ class TextRegimen(db.Model):
             dict['sunday_text'] = text.text_msg
         return dict
 
+class SurveyResult(db.Model):
+    __tablename__ = 'survey_results'
+    id = Column(Integer, primary_key=True)
+    org_id = Column(db.Integer, db.ForeignKey('organizations.id'))
+    survey_question = Column(String(500), nullable=False)
+    survey_results = Column(db.Integer, nullable = False)
 
+    def __init__(self, org_id, question, result):
+        self.org_id = org_id
+        self.survey_question = question
+        self.survey_results = result
 

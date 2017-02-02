@@ -163,12 +163,16 @@ class TestApi(unittest.TestCase):
         db.session.commit()
 
         request = MyDict()
+        res1 = {"question": "Test question", "result": "test result"}
         request['user_id'] = self.pt1.id
-        request['date'] = today
+        request['appt_id'] = appt.id
+        request['survey_results'] = [res1]
         request.authorization = auth
 
         speranza.api.appointments.checkin_out(request)
         appts = models.Appointment.query.all()
+        survey_results = models.SurveyResult.query.all()
+        assert (survey_results[0].survey_question == "Test question")
         assert appts[0].checkin
 
         failed = False

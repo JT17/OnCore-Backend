@@ -7,7 +7,7 @@ from flask import Flask
 import unittest
 import datetime
 
-from speranza.models import Address, Appointment, Manager, Organization, Patient, Text, TextRegimen
+from speranza.models import Address, Appointment, Manager, Organization, Patient, Text, TextRegimen, SurveyResult
 from speranza.application import db
 
 
@@ -25,11 +25,10 @@ class TestModels(unittest.TestCase):
         self.new_address = Address(street_number=1234, street_name="test street", street_type="st",
                                    city_name="Palo Alto", zipcode=98505, district="CA")
         self.new_org = Organization(org_name="test", org_pwd="pwd", org_email="test_email")
-        self.new_manager = Manager(firstname="test", lastname="user", phone_number=12345, password="pass",
+        self.new_manager = Manager(firstname="test", lastname="user", username="username", phone_number=12345, password="pass",
                           email="test_email@email.com")
         self.new_patient = Patient(firstname="test", lastname="pt", phone_number=12345,
                           contact_number=54321, address_id=self.new_address.id, dob="01/01/2000", gov_id=1)
-
 
     def tearDown(self):
         db.session.remove()
@@ -203,6 +202,13 @@ class TestModels(unittest.TestCase):
         assert(regimens[0].org_id == self.new_org.id)
         assert(regimens[0].regimen_name == new_regimen.regimen_name)
 
+    def test_survey(self):
+        survey_result = SurveyResult(org_id = 1, question="Did this work?", result=1)
+        db.session.add(survey_result)
+        db.session.commit()
+
+        survey_results = SurveyResult.query.all()
+        assert(len(survey_results) == 1)
     def test_regimen_text(self):
         db.session.add(self.new_org)
         db.session.commit()
@@ -261,6 +267,7 @@ class TestModels(unittest.TestCase):
 
         regimen_fetch = TextRegimen.query.filter(TextRegimen.id == new_regimen.id).first()
         assert(regimen_fetch.friday_text is None)
+
 
 
 
