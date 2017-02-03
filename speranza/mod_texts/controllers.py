@@ -41,3 +41,8 @@ def get_org_texts():
         return jsonify(status='200', value=res['msg'], texts = res['texts'])
     else:
         abort(500, res['msg'])
+
+@mod_texts.route('/api/set_text_regimen', methods=['GET', 'POST'])
+@auth.login_required
+def set_text_regimen():
+    pass

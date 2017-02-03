@@ -292,20 +292,20 @@ class TestApi(unittest.TestCase):
         minutedelta = datetime.timedelta(minutes=1)
 
         today_ts = datetime.datetime.now()
-        today2_ts = today_ts - minutedelta
-        today3_ts = today_ts - minutedelta - minutedelta
+        today2_ts = today_ts + minutedelta
+        today3_ts = today_ts + minutedelta + minutedelta
         self.pt1.add_to_org(self.mgr.org_id)
         self.pt2.add_to_org(self.mgr.org_id)
         self.pt3.add_to_org(self.mgr.org_id)
         request = MyDict()
         request.authorization = auth
-
+        request["patient_id"] = self.pt1.id
         appts_res = speranza.api.appointments.get_patient_appts(request)
         assert len(appts_res['appts']) == 0
 
         appt1 = models.Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
-        appt2 = models.Appointment(self.pt2.id, self.mgr.id, today2_ts, "blah")
-        appt3 = models.Appointment(self.pt3.id, self.mgr.id, today3_ts, "blah")
+        appt2 = models.Appointment(self.pt1.id, self.mgr.id, today2_ts, "blah")
+        appt3 = models.Appointment(self.pt1.id, self.mgr.id, today3_ts, "blah")
         db.session.add(appt1)
         db.session.add(appt2)
         db.session.add(appt3)
@@ -316,14 +316,29 @@ class TestApi(unittest.TestCase):
         assert (len(appts) == 3), len(appts)
 
         appt_by_date = sorted(appts, key=lambda appt: appt['date'])
-        assert (appt_by_date[0]['date'].strftime("%Y-%m-%d %H:%M") == today3_ts.strftime("%Y-%m-%d %H:%M"))
-        assert (appt_by_date[0]['firstname'] == self.pt3.firstname)
-        assert (appt_by_date[0]['lastname'] == self.pt3.lastname)
+        assert (appt_by_date[0]['date'] == ( today_ts - datetime.datetime(1970, 1, 1)).total_seconds())
+        assert (appt_by_date[0]['patient_name'] == self.pt1.firstname + " " + self.pt1.lastname)
         assert (appt_by_date[0]['appt_type'] == "blah")
         assert (appt_by_date[2]['patient_id'] == self.pt1.id)
-        assert (appt_by_date[2]['date'].strftime("%Y-%m-%d %H:%M") == today_ts.strftime("%Y-%m-%d %H:%M"))
-        assert (appt_by_date[2]['firstname'] == self.pt1.firstname)
-        assert (appt_by_date[2]['lastname'] == self.pt1.lastname)
+        assert (appt_by_date[2]['date'] == ( today3_ts - datetime.datetime(1970, 1, 1)).total_seconds())
+        assert (appt_by_date[2]['patient_name'] == self.pt1.firstname + " " + self.pt1.lastname)
+        assert (appt_by_date[2]['appt_type'] == "blah")
+
+        today4_ts = today_ts + minutedelta + minutedelta + minutedelta
+        appt4 = models.Appointment(self.pt1.id, self.mgr.id, today4_ts, "blah")
+        db.session.add(appt4)
+        db.session.commit()
+        appts_res = speranza.api.appointments.get_patient_appts(request)
+        appts = appts_res['appts']
+        assert (len(appts) == 3), len(appts)
+
+        appt_by_date = sorted(appts, key=lambda appt: appt['date'])
+        assert (appt_by_date[0]['date'] == (today_ts - datetime.datetime(1970, 1, 1)).total_seconds())
+        assert (appt_by_date[0]['patient_name'] == self.pt1.firstname + " " + self.pt1.lastname)
+        assert (appt_by_date[0]['appt_type'] == "blah")
+        assert (appt_by_date[2]['patient_id'] == self.pt1.id)
+        assert (appt_by_date[2]['date'] == (today3_ts - datetime.datetime(1970, 1, 1)).total_seconds())
+        assert (appt_by_date[2]['patient_name'] == self.pt1.firstname + " " + self.pt1.lastname)
         assert (appt_by_date[2]['appt_type'] == "blah")
 
     def test_edit_patient(self):
@@ -891,6 +906,9 @@ class TestApi(unittest.TestCase):
         appt_types = res['appt_types']
         print appt_types
         assert (len(appt_types) == 2)
+
+    def test_set_patient_regimen(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()

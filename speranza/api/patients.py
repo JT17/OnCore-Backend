@@ -1,6 +1,6 @@
 from flask import abort
 
-from speranza.models import Address, Manager, Patient, Organization
+from speranza.models import Address, Manager, Patient, Organization, TextRegimen
 from speranza.api.verification import verify_form_data, verify_manager_access, verify_new_user
 from speranza.api.common import get_form_data, sanitize_phone_number
 from speranza.api.addresses import add_address
@@ -227,3 +227,26 @@ def delete_patient(request, debug=False):
         print e
         db.session.rollback()
         abort(500, "borrar ha fallado")
+
+def set_text_regimen(request, debug=False):
+    res = {"msg":"something has gone wrong"}
+    form_data = get_form_data(request, debug)
+
+    requirements = ['patient_id', 'regimen_id']
+    if not verify_form_data(requirements, form_data):
+        abort(422, "Necesitamos mas informacion, intenta otra vez por favor")
+    auth = request.authorization
+    if auth is not None:
+        manager = Manager.query.filter(Manager.id == auth.username).first()
+        if manager is None:
+            abort(401, "Este gerente es incorecto, intenta otra vez por favor")
+        patient = Patient.query.filter(Patient.id == form_data['patient_id']).first()
+        if patient is None:
+            abort(422, "Hay una problema con la identificacion del paciente, intenta otra vez por favor")
+        regimen_exists = TextRegimen.query.filter(TextRegimen.id == form_data['regimen_id']).first()
+        if regimen_exists is None:
+            abort(422, "Hay una problema con la identificacion del regimen, intenta otra vez por favor")
+        patient.text_regimen_id = regimen_exists.id
+        db.session.commit()
+        res['msg'] = 'success'
+        return res

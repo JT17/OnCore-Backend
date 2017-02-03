@@ -63,6 +63,7 @@ class Appointment(db.Model):
         self.checkin = False
         self.checkout = False
 
+    @property
     def serialize(self):
         """Return object data in easily serializable format"""
         timestamp = (self.date - datetime(1970, 1, 1)).total_seconds()

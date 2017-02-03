@@ -1,5 +1,6 @@
 from flask import abort
 import datetime
+
 import sqlalchemy.exc
 
 from speranza.api.common import get_form_data
@@ -15,46 +16,41 @@ def get_all_appts():
 
 
 # TODO
-def get_patient_appts(request):
-    # form_data = get_form_data(request, debug)
+def get_patient_appts(request, debug=False):
+    form_data = get_form_data(request, debug)
 
     res = {'msg': 'Sorry something went wrong'}
     auth = request.authorization
     today = datetime.date.today()
-    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-    # try:
-    # pts = Patient.query.filter(Patient.manager_id == int(auth.username)).with_entities(Patient.id);
-    # except ValueError, e:
-    # db.session.rollback();
-    # abort(500, str(e));
+    requirements = ["patient_id"]
+    if verify_form_data(requirements, form_data):
+        manager = Manager.query.filter(Manager.id == auth.username).first()
+        if manager is None:
+            abort(422, "La identificacion del gerente es incorecto, intenta otra vez por favor")
+        patient_exists = Patient.query.filter(Patient.id == form_data['patient_id']).first()
+        if patient_exists is None:
+            abort(422, "La identificacion del paciente no existe, intenta otra vez por favor")
+        if patient_exists.grant_access(manager.org_id) == False:
+            abort(401, "La gerente es incorecto, intenta otra vez por favor")
+        ser_appts = []
+        try:
+            appts = Appointment.query.filter(
+                Appointment.date >= today).filter(Appointment.patient_id == form_data["patient_id"]).order_by(Appointment.date).all()
+            for appt in appts:
+                ser_appts.append(appt.serialize)
 
-    # TODO: broken
-    # appts = Appointment.query.filter(Appointment.user_id.in_(Patient.query.filter(Patient.manager_id ==
-    # int(auth.username)).with_entities(Patient.id))).filter(Appointment.date >= today).filter(Appointment.date <
-    # tomorrow).join(Patient, (Patient.id == Appointment.user_id)).with_entities(Patient.firstname, Patient.lastname,
-    # Appointment.date, Appointment.appt_type).all()
-
-    ser_appts = []
-    try:
-        appts = Appointment.query.filter(Appointment.manager_id == int(auth.username)).filter(
-            Appointment.date >= today).filter(Appointment.date < tomorrow).join(Patient, (
-            Patient.id == Appointment.patient_id)).with_entities(Patient.id, Patient.firstname, Patient.lastname,
-                                                                 Appointment.date, Appointment.appt_type).all()
-
-        for appt in appts:
-            ser_appt = {'patient_id': appt.id, 'firstname': appt.firstname, 'lastname': appt.lastname,
-                        'date': appt.date, 'appt_type': appt.appt_type}
-            ser_appts.append(ser_appt)
-    except ValueError, e:
-        db.session.rollback()
-        abort(500, str(e))
-
-    res['msg'] = 'success'
-    res['appts'] = ser_appts
-    return res
+        except ValueError, e:
+            db.session.rollback()
+            abort(500, str(e))
+        if len(ser_appts) > 3:
+            ser_appts = ser_appts[:3]
+        res['msg'] = 'success'
+        res['appts'] = ser_appts
+        return res
+    else:
+        abort(422, "Necesitamos mas informacion, intenta otra vez por favor")
 
 
-# TODO
 def get_manager_appts(request, debug=False):
     res = {'msg': 'Sorry something went wrong'}
     form_data = get_form_data(request, debug)
