@@ -204,10 +204,12 @@ def checkin_out(request, checkin=True, debug=False):
 
             #this should never be the case but it isn't worth failing if they've gotten here and no idea why this would ever fail
             if(manager.org_id is not None):
-                for res in form_data['survey_results']:
-                    new_res = SurveyResult(manager.org_id, res['question'], res['result'])
+                for survey_res in form_data['survey_results']:
+                    new_res = SurveyResult(manager.org_id, survey_res['question'], survey_res['result'])
                     db.session.add(new_res)
+                    print "success"
                 db.session.commit()
+            print res
             return res
         except sqlalchemy.exc.DatabaseError, e:
             abort(500, str(e))
