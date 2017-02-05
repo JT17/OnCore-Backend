@@ -22,7 +22,7 @@ def add_organization():
     else:
         abort(500, res['msg'])
 
-@mod_orgs.route('/api/get_org_appt_types', methods=['GET'])
+@mod_orgs.route('/api/get_org_appt_types', methods=['POST'])
 @auth.login_required
 def get_org_appt_types():
     res = speranza.api.organizations.get_org_appt_types(request)

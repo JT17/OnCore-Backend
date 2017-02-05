@@ -203,6 +203,7 @@ def get_org_texts(request, debug=False):
 def get_org_appt_types(request, debug=False):
     res = {'msg':'Sorry something went wrong'}
     mgr_id = request.authorization.username
+    print "we made it here"
     if mgr_id is None:
         abort(401, "No hay identificaion para el gerente")
     manager = Manager.query.filter(Manager.id == mgr_id).first()

@@ -79,9 +79,12 @@ def add_appt(request, debug=False):
     requirements = ['user_id', 'date', 'appt_type']
     if verify_form_data(requirements, form_data):
         # error check that manager making appt is the patient's manager
+        print form_data['user_id']
         if verify_patient_exists(form_data['user_id']) is False:
+            print "patient doesn't exist"
             abort(422, "La identificacion del paciente es incorrecto")
         if len(form_data['appt_type']) == 0:
+            print "appt type is fucked up"
             abort(422, "El appt_type es incorrecto")
 
         if not verify_manager_access(form_data['user_id'], request.authorization):
@@ -93,6 +96,8 @@ def add_appt(request, debug=False):
                 Appointment.date == timestamp)
 
             if exists.first() is not None:
+                print "there's already an appointment for this date: "
+                print timestamp
                 abort(422, "Ya existe una cita para este fecha")
 
             new_appt = Appointment(form_data['user_id'], int(request.authorization.username), timestamp,
