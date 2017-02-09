@@ -58,24 +58,21 @@ def add_organization(request, debug=False):
 def add_manager_to_organization(request, debug=False):
     res = {'msg': 'Sorry something went wrong'}
     form_data = get_form_data(request, debug)
-
-    requirements = ['org_id']
+    print form_data
+    requirements = ['mgr_id', 'org_id']
     if not verify_form_data(requirements, form_data):
         print "wtf"
         abort(422, "Necesita mas informacion, intenta otra vez por favor")
 
-    mgr_id = request.authorization.username
-    if mgr_id is not None:
-        manager = Manager.query.filter(Manager.id == mgr_id).first()
-        if manager is None:
-            abort(401, "La identificacion del gerente es incorrecto")
-    else:
-        abort(401, "No hay identificacion para el gerente")
+    manager = Manager.query.filter(Manager.id == form_data['mgr_id']).first()
+    if manager is None:
+        abort(401, "La identificacion del gerente es incorrecto")
+
     org = Organization.query.filter(Organization.id == form_data['org_id']).first()
     if org is None:
         abort(422, "No hay organizacion con este identificaion, intenta otra vez por favor")
 
-    org.add_manager(mgr_id)
+    org.add_manager(form_data['mgr_id'])
     manager.set_org(form_data['org_id'])
     manager.pending_access = False
     db.session.commit()

@@ -8,7 +8,7 @@ from speranza.util.mixpanel_logging import mp
 from speranza.application import db
 from speranza.util import email_messaging
 
-REQUEST_LINK = "link to add manager to org endpoint"
+REQUEST_LINK = "http://www.example.com/test2"
 
 
 def verify_manager_access(patient, auth):
@@ -106,9 +106,10 @@ def ask_for_org_access(request, debug=False):
     if org is None:
         abort(422, "No hay organizacion con este identificacion")
 
+    request = REQUEST_LINK + "/mgr_id/" + str(mgr.id) + "/org/" + str(org.id) + "/name/" + mgr.firstname + "%20" + mgr.lastname
     msg_text = "Hola, \r\n Me llamo {0} {1} y quiero unirme al {2} organizacion. " \
                "Puede agregame al organizacion con este hipirenlace: {3}. \r\n Muchas Gracias, " \
-               "\r\n {4}".format(mgr.firstname, mgr.lastname, org.org_name, REQUEST_LINK, mgr.firstname)
+               "\r\n {4}".format(mgr.firstname, mgr.lastname, org.org_name, request, mgr.firstname)
 
     subj = "Añada un gerente al orgnizacion {0}".decode("utf-8").format(org.org_name)
 

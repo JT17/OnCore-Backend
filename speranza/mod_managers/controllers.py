@@ -28,6 +28,7 @@ def signin():
 @auth.login_required
 def ask_for_org_access():
     res = speranza.api.managers.ask_for_org_access(request)
+    print res
     if res['msg'] == 'success':
         return jsonify(status='200', value=res['msg'])
     else:

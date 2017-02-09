@@ -30,3 +30,12 @@ def get_org_appt_types():
         return jsonify(status='200', value=res['msg'], appt_types = res['appt_types'])
     else:
         abort(500, res['msg'])
+
+@mod_orgs.route('/api/add_manager_to_org', methods=['POST'])
+@auth.login_required
+def add_manager_to_org():
+    res = speranza.api.organizations.add_manager_to_organization(request)
+    if res['msg'] == 'success':
+        return jsonify(status='200', value=res['msg'])
+    else:
+        abort(500, res['msg'])
