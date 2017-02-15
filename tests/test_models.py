@@ -79,11 +79,11 @@ class TestModels(unittest.TestCase):
         assert (test_fetch.date.strftime("%Y-%m-%d %H:%M") == self.time.strftime("%Y-%m-%d %H:%M"))
         assert (test_fetch.patient_id == 1)
 
-        ser_test = test_fetch.serialize()
+        ser_test = test_fetch.serialize
         assert (ser_test['patient_id'] == 1)
 
     def test_manager(self):
-        manager = Manager(firstname="test", lastname="user", phone_number=12345, password="pass",
+        manager = Manager(firstname="test", lastname="user", username="test_user", phone_number=12345, password="pass",
                           email="test_email@email.com")
         assert (manager.org_id == None)
         db.session.add(manager)
@@ -99,10 +99,9 @@ class TestModels(unittest.TestCase):
 
         f_o = Organization.query.all()
         assert (len(f_o) == 1)
-
-        admin1 = Manager(firstname="admin", lastname="wan", phone_number=12345, password="pass",
+        admin1 = Manager(firstname="admin", lastname="wan", username="user1", phone_number=12345, password="pass",
                          email="test_email@email.com")
-        admin2 = Manager(firstname="admin", lastname="two", phone_number=12345, password="pass",
+        admin2 = Manager(firstname="admin", lastname="two", username="user2", phone_number=12345, password="pass",
                          email="test_email@email.com")
 
         db.session.add(admin1)
