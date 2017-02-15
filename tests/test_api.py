@@ -255,7 +255,7 @@ class TestApi(unittest.TestCase):
 
         request['firstname'] = "John"
         res = speranza.api.patients.add_patient(request, debug=True)
-        assert (res['patient_contact_number'] == "50287654321"), res
+        assert (res['patient_phone_number'] == "50212345678"), res
         assert len(models.Patient.query.all()) == 4
 
         # make sure patient is in the right org
