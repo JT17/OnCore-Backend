@@ -65,7 +65,7 @@ def get_manager_appts(request, debug=False):
             appts = Appointment.query.filter(Appointment.manager_id == manager_id).all()
             appt_list = []
             for appt in appts:
-                appt_list.append(appt.serialize())
+                appt_list.append(appt.serialize)
             res['appts'] = appt_list
             res['msg'] = 'success'
         return res

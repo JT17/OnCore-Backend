@@ -58,10 +58,8 @@ def add_organization(request, debug=False):
 def add_manager_to_organization(request, debug=False):
     res = {'msg': 'Sorry something went wrong'}
     form_data = get_form_data(request, debug)
-    print form_data
     requirements = ['mgr_id', 'org_id']
     if not verify_form_data(requirements, form_data):
-        print "wtf"
         abort(422, "Necesita mas informacion, intenta otra vez por favor")
 
     manager = Manager.query.filter(Manager.id == form_data['mgr_id']).first()

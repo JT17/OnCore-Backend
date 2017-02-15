@@ -564,6 +564,7 @@ class TestApi(unittest.TestCase):
 
         assert failed
         request['org_id'] = self.org1.id
+        request['mgr_id'] = self.mgr.id
         res = speranza.api.organizations.add_manager_to_organization(request, debug=True)
         assert res['msg'] == "success"
         assert self.mgr.org_id == self.org1.id
@@ -762,7 +763,7 @@ class TestApi(unittest.TestCase):
         res = speranza.api.organizations.get_org_text_regimens(request, debug=True)
         regimens = res['regimens']
         assert(len(regimens) == 2)
-        regimen_names = [x.regimen_name for x in regimens]
+        regimen_names = [x['regimen_name'] for x in regimens]
         assert(new_regimen1.regimen_name in regimen_names)
         assert(new_regimen2.regimen_name in regimen_names)
 
@@ -786,7 +787,7 @@ class TestApi(unittest.TestCase):
 
         texts = res['texts']
         assert (len(texts) == 2)
-        regimen_names = [x.text_msg for x in texts]
+        regimen_names = [x['text_msg'] for x in texts]
         assert (new_text1.text_msg in regimen_names)
         assert (new_text2.text_msg in regimen_names)
 
@@ -796,8 +797,8 @@ class TestApi(unittest.TestCase):
         res = speranza.api.organizations.get_organizations(request, debug=True)
         orgs = res['orgs']
         assert(len(orgs) == 2)
-        assert(self.org1 in orgs)
-        assert(self.org2 in orgs)
+        assert(self.org1.serialize in orgs)
+        assert(self.org2.serialize in orgs)
 
     def test_manager_signin(self):
         request =  MyDict()
@@ -877,7 +878,7 @@ class TestApi(unittest.TestCase):
         appts = res['appts']
         assert (len(appts) == 2)
         print appts
-        assert(apt1.serialize() in appts)
+        assert(apt1.serialize in appts)
 
     def test_get_appt_types(self):
         request = MyDict()
