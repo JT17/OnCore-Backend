@@ -93,7 +93,7 @@ class Patient(db.Model):
     phone_number = Column(String(250), nullable=False)
     contact_number = Column(String(250), nullable=True)
     address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True)
-    dob = Column(String(250), nullable=False)
+    dob = Column(DateTime, nullable=False)
     gov_id = Column(Integer, nullable=False)
     text_regimen_id = Column(Integer, ForeignKey('text_regimens.id'), nullable=True)
     organizations = db.relationship('Organization', secondary=patient_organization_table, backref='patients')
@@ -186,6 +186,9 @@ class Manager(db.Model):
 
     def verify_password(self, password):
         return pwd_context.verify(password, self.password)
+
+    def update_password(self, password):
+        self.password = pwd_context.encrypt(password)
 
     def generate_auth_token(self, expiration=6000):
         s = Serializer(application.config['SECRET_KEY'], expires_in=expiration)

@@ -37,7 +37,11 @@ def ask_for_org_access():
 @mod_managers.route('/api/edit_manager', methods=['GET', 'POST'])
 @auth.login_required
 def edit_manager():
-    pass
+    res = speranza.api.managers.edit_manager(request)
+    if res['msg'] == 'success':
+        return jsonify(status='200')
+    else:
+        abort(500, res['msg'])
     # TODO
     # res = speranza.api.managers.edit_manager(request)
     # if res['msg'] == "success":

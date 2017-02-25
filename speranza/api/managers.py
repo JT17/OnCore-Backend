@@ -19,7 +19,7 @@ def verify_manager_access(patient, auth):
 def verify_password(username, password_or_token):
     mgr = Manager.verify_auth_token(password_or_token)
     if not mgr:
-        mgr = Manager.query.filter(Manager.username == username).first()
+        mgr = Manager.query.filter(Manager.id == username).first()
         if not mgr or not mgr.verify_password(password_or_token):
             return False
     return True
@@ -80,6 +80,23 @@ def add_manager(request, debug=False):
     res['manager_id'] = manager.id
     return res
 
+def edit_manager(request, debug=False):
+    res = {'msg':'Something has gone wrong'}
+    form_data = get_form_data(request, debug)
+
+    user_id = request.authorization.username
+    pwd = request.authorization.password
+    if(verify_password(user_id, pwd) == False):
+        abort(401, "La contrasena es incorecto, intentalo otra vez por favor")
+    else:
+        mgr = Manager.query.filter(Manager.id == user_id).first()
+        if ('new_pwd' in form_data):
+            mgr.update_password(form_data['new_pwd'])
+        if('new_email' in form_data):
+            mgr.email = form_data['new_email']
+        db.session.commit()
+    res['msg'] = 'success'
+    return res
 
 # sends out an email to all of the admins with a link
 # TODO talk to deepak for specifics of email to be sent e.g. the url string

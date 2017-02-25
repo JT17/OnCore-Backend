@@ -538,6 +538,26 @@ class TestApi(unittest.TestCase):
             assert (type(e) == UnprocessableEntity), e
             failed = True
         assert failed
+    def test_edit_manager(self):
+        auth  = Placeholder()
+        auth.username = self.mgr.id
+        auth.password = "pwd"
+
+        request = MyDict()
+        request.authorization = auth
+
+        speranza.api.managers.edit_manager(request, debug=True)
+        assert(speranza.api.managers.verify_password(auth.username, auth.password) == True, "Failed auth" )
+
+        request['new_pwd'] = 'pwd1'
+        speranza.api.managers.edit_manager(request, debug=True)
+        assert (speranza.api.managers.verify_password(auth.username, auth.password) == False, "Auth shouldn't have succeeded")
+        assert (speranza.api.managers.verify_password(auth.username, "pwd1") == False, "Auth shouldn't have succeeded")
+
+        auth.password = "pwd1"
+        request['new_email'] = "new_email_address"
+        speranza.api.managers.edit_manager(request, debug=True)
+        assert(self.mgr.email == "new_email_address")
 
     def test_add_manager_to_org(self):
         auth = Placeholder()

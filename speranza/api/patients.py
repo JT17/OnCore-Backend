@@ -7,6 +7,7 @@ from speranza.api.addresses import add_address
 from speranza.application import db
 from speranza.util.mixpanel_logging import mp
 from speranza.util.plivo_messenger import send_message
+import datetime
 
 
 def get_patients():
@@ -160,14 +161,16 @@ def add_patient(request, debug=False):
             # right now storing everything as a datetime, but we need to be consistent about this
             # dob = datetime.datetime.utcfromtimestamp(float(form_data['dob']));
             patient_phone_number = sanitize_phone_number(form_data['phone_number'])
+            timestamp = datetime.datetime.utcfromtimestamp(int(float((form_data['dob']))))
             if "contact_number" in form_data:
                 patient_contact_number = sanitize_phone_number(form_data['contact_number'])
+
                 patient = Patient(firstname=form_data['firstname'],
                                   lastname=form_data['lastname'],
                                   phone_number=patient_phone_number,
                                   contact_number=patient_contact_number,
                                   address_id=patient_addr.id,
-                                  dob=form_data['dob'],
+                                  dob=timestamp,
                                   gov_id=form_data['gov_id'])
             else:
                 patient = Patient(firstname=form_data['firstname'],
@@ -175,7 +178,7 @@ def add_patient(request, debug=False):
                                   phone_number=patient_phone_number,
                                   contact_number=None,
                                   address_id=patient_addr.id,
-                                  dob=form_data['dob'],
+                                  dob=timestamp,
                                   gov_id=form_data['gov_id'])
             # add patient to organization
             manager_org = Organization.query.filter(Organization.id == manager.org_id).first()
