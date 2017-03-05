@@ -19,8 +19,11 @@ def verify_manager_access(patient, auth):
 def verify_password(username, password_or_token):
     mgr = Manager.verify_auth_token(password_or_token)
     if not mgr:
+        print username
         mgr = Manager.query.filter(Manager.id == username).first()
-        if not mgr or not mgr.verify_password(password_or_token):
+        print mgr
+        print mgr.verify_password(password_or_token)
+        if not mgr or (mgr.verify_password(password_or_token) == False):
             return False
     return True
 
@@ -30,23 +33,23 @@ def login_manager(request, debug=False):
     requirements = ['username', 'password']
     if not verify_form_data(requirements, form_data):
         abort(422, "Necesita mas informacion, intenta otra vez por favor")
-    not_liar = verify_password(form_data['username'], form_data['password'])
-    if(not_liar == False):
-        abort(401, "Contrasena incorrecta")
+
+
+    manager = Manager.query.filter(Manager.username == form_data['username']).first()
+    if(manager is not None):
+        if(manager.verify_password(form_data['password']) == False):
+            abort(401, "Incorecta contrasena, intenta otra vez por favor")
+        res['msg'] = 'success'
+        res['manager_id']  = manager.id
     else:
-        manager = Manager.query.filter(Manager.username == form_data['username']).first()
-        if(manager is not None):
-            res['msg'] = 'success'
-            res['manager_id']  = manager.id
-        else:
-            abort(422, "Hay una problema, intenta otra vez por favor")
-        if(manager.org_id is None):
-            res['org_exists'] = False
-        else:
-            res['org_exists'] = True
-            res['org_id'] = manager.org_id
-        res['pending'] = manager.pending_access
-        return res
+        abort(422, "Hay una problema, intenta otra vez por favor")
+    if(manager.org_id is None):
+        res['org_exists'] = False
+    else:
+        res['org_exists'] = True
+        res['org_id'] = manager.org_id
+    res['pending'] = manager.pending_access
+    return res
 
 def add_manager(request, debug=False):
     res = {'msg': 'Something has gone wrong'}
@@ -87,6 +90,7 @@ def edit_manager(request, debug=False):
     user_id = request.authorization.username
     pwd = request.authorization.password
     if(verify_password(user_id, pwd) == False):
+        print "password failed"
         abort(401, "La contrasena es incorecto, intentalo otra vez por favor")
     else:
         requirements = ['orig_pwd']
@@ -98,11 +102,13 @@ def edit_manager(request, debug=False):
 
         mgr = Manager.query.filter(Manager.id == user_id).first()
         if ('new_pwd' in form_data):
+            print "new pwd set to " + form_data["new_pwd"]
             mgr.update_password(form_data['new_pwd'])
         if('new_email' in form_data):
             mgr.email = form_data['new_email']
         db.session.commit()
     res['msg'] = 'success'
+    print "successfully changed shit"
     return res
 
 # sends out an email to all of the admins with a link
