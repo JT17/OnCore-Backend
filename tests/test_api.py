@@ -545,15 +545,17 @@ class TestApi(unittest.TestCase):
 
         request = MyDict()
         request.authorization = auth
-
+        request['orig_pwd'] = 'pwd'
         speranza.api.managers.edit_manager(request, debug=True)
         assert(speranza.api.managers.verify_password(auth.username, auth.password) == True, "Failed auth" )
 
+        request['orig_pwd'] = 'pwd'
         request['new_pwd'] = 'pwd1'
         speranza.api.managers.edit_manager(request, debug=True)
         assert (speranza.api.managers.verify_password(auth.username, auth.password) == False, "Auth shouldn't have succeeded")
         assert (speranza.api.managers.verify_password(auth.username, "pwd1") == False, "Auth shouldn't have succeeded")
 
+        request['orig_pwd'] = 'pwd1'
         auth.password = "pwd1"
         request['new_email'] = "new_email_address"
         speranza.api.managers.edit_manager(request, debug=True)

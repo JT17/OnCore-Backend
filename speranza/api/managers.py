@@ -89,6 +89,13 @@ def edit_manager(request, debug=False):
     if(verify_password(user_id, pwd) == False):
         abort(401, "La contrasena es incorecto, intentalo otra vez por favor")
     else:
+        requirements = ['orig_pwd']
+        if not verify_form_data(requirements, form_data):
+            print "failed verification of data"
+            abort(422, "Necesita mas informacion, intenta otra vez por favor")
+        if(verify_password(user_id, form_data['orig_pwd']) == False):
+            abort(401, "La contrasena es incorecto, intentalo otra vez por favor")
+
         mgr = Manager.query.filter(Manager.id == user_id).first()
         if ('new_pwd' in form_data):
             mgr.update_password(form_data['new_pwd'])
