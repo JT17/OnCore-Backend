@@ -53,9 +53,6 @@ def find_patient(request, debug=False):
         if verify_manager_access(patient.id, request.authorization):
             verified_patients.append(patient.serialize)
 
-    if len(verified_patients) == 0:
-        abort(422, "No hay pacientes con este informacion")
-
     res['msg'] = 'success'
     res['patients'] = verified_patients
     return res

@@ -90,7 +90,6 @@ def edit_manager(request, debug=False):
     user_id = request.authorization.username
     pwd = request.authorization.password
     if(verify_password(user_id, pwd) == False):
-        print "password failed"
         abort(401, "La contrasena es incorecto, intentalo otra vez por favor")
     else:
         requirements = ['orig_pwd']

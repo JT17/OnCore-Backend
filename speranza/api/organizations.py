@@ -172,6 +172,7 @@ def get_org_text_regimens(request, debug=False):
     for regimen in regimens:
         serialized_regimens.append(regimen.serialize)
     res['regimens'] = serialized_regimens
+    print serialized_regimens
     res['msg'] = "success"
     return res
 
