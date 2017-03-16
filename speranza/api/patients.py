@@ -158,7 +158,8 @@ def add_patient(request, debug=False):
             # right now storing everything as a datetime, but we need to be consistent about this
             # dob = datetime.datetime.utcfromtimestamp(float(form_data['dob']));
             patient_phone_number = sanitize_phone_number(form_data['phone_number'])
-            timestamp = datetime.datetime.utcfromtimestamp(int(float((form_data['dob']))))
+            #timestamp = datetime.datetime.utcfromtimestamp(int(float((form_data['dob']))))
+            timestamp = float(form_data['dob'])
             if "contact_number" in form_data:
                 patient_contact_number = sanitize_phone_number(form_data['contact_number'])
 

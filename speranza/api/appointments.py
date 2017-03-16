@@ -22,6 +22,9 @@ def get_patient_appts(request, debug=False):
     res = {'msg': 'Sorry something went wrong'}
     auth = request.authorization
     today = datetime.date.today()
+    today_dt = datetime.datetime(today.year, today.month, today.day)
+    epoch = datetime.datetime.utcfromtimestamp(0)
+    today_ts = (today_dt - epoch).total_seconds()
     requirements = ["patient_id"]
     if verify_form_data(requirements, form_data):
         manager = Manager.query.filter(Manager.id == auth.username).first()
@@ -35,7 +38,7 @@ def get_patient_appts(request, debug=False):
         ser_appts = []
         try:
             appts = Appointment.query.filter(
-                Appointment.date >= today).filter(Appointment.patient_id == form_data["patient_id"]).order_by(Appointment.date).all()
+                Appointment.date >= today_ts).filter(Appointment.patient_id == form_data["patient_id"]).order_by(Appointment.date).all()
             for appt in appts:
                 ser_appts.append(appt.serialize)
 
@@ -84,17 +87,18 @@ def add_appt(request, debug=False):
             print "patient doesn't exist"
             abort(422, "La identificacion del paciente es incorrecto")
         if len(form_data['appt_type']) == 0:
-            print "appt type is fucked up"
             abort(422, "El appt_type es incorrecto")
 
         if not verify_manager_access(form_data['user_id'], request.authorization):
             abort(401, "La identificacion del gerente es incorrecto")
         try:
             # right now storing everything as a datetime, but we need to be consistent about this
-            timestamp = datetime.datetime.utcfromtimestamp(int(float((form_data['date']))))
+            #timestamp = datetime.datetime.utcfromtimestamp(int(float((form_data['date']))))
+            timestamp = form_data['date']
             exists = Appointment.query.filter(Appointment.patient_id == form_data['user_id']).filter(
                 Appointment.date == timestamp)
 
+            print exists.all()
             if exists.first() is not None:
                 print "there's already an appointment for this date: "
                 print timestamp
@@ -110,6 +114,7 @@ def add_appt(request, debug=False):
                          properties={'date': timestamp, 'appt_type': form_data['appt_type']})
         except sqlalchemy.exc.DatabaseError, e:
             db.session.rollback()
+            print str(e)
             abort(500, str(e))
         # db.session.flush();
         return res
@@ -124,14 +129,14 @@ def edit_appt(request, debug=False):
     if not verify_form_data(requirements, form_data):
         abort(422, "Necesita mas informaction, intenta otra vez por favor")
     else:
-        timestamp = datetime.datetime.utcfromtimestamp(int(form_data['old_date']))
+        timestamp = int(form_data['old_date'])
         appt = Appointment.query.filter(Appointment.patient_id == form_data['user_id']).filter(
             Appointment.date == timestamp).first()
         if appt is None:
             abort(422, "No hay una cita para este paciente y fecha")
         changed = False
         if 'new_date' in form_data:
-            new_timestamp = datetime.datetime.utcfromtimestamp(int(form_data['new_date']))
+            new_timestamp = int(form_data['new_date'])
             appt.date = new_timestamp
             changed = True
         if 'appt_type' in form_data:
@@ -155,7 +160,7 @@ def delete_appt(request, debug=False):
     if not verify_form_data(requirements, form_data):
         abort(422, "Necesita mas informaction, intenta otra vez por favor")
     else:
-        timestamp = datetime.datetime.utcfromtimestamp(int(form_data['date']))
+        timestamp = form_data['date']
         appt = Appointment.query.filter(Appointment.patient_id == form_data['user_id']).filter(
             Appointment.date == timestamp)
         if appt.first() is None:
@@ -212,6 +217,7 @@ def checkin_out(request, checkin=True, debug=False):
             print res
             return res
         except sqlalchemy.exc.DatabaseError, e:
+            print e
             abort(500, str(e))
     else:
         abort(422, "Necesita mas informacion, intenta otra vez por favor")

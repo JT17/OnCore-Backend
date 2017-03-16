@@ -69,14 +69,13 @@ class TestApi(unittest.TestCase):
         db.session.add(self.mgr)
         db.session.add(self.mgr1)
         db.session.commit()
-
         self.pt1 = models.Patient(firstname="test", lastname="pt1", phone_number=12345,
-                                  contact_number=54321, address_id=self.addr1.id, dob="01/01/2000", gov_id=1)
+                                  contact_number=54321, address_id=self.addr1.id, dob="946684800", gov_id=1)
         self.pt2 = models.Patient(firstname="test1", lastname="pt2", phone_number=22222,
-                                  contact_number=54321, address_id=self.addr2.id, dob="02/02/2002", gov_id=2)
+                                  contact_number=54321, address_id=self.addr2.id, dob="1012608000", gov_id=2)
 
         self.pt3 = models.Patient(firstname="test2", lastname="pt3", phone_number=33333,
-                                  contact_number=54321, address_id=self.addr3.id, dob="03/03/3003", gov_id=3)
+                                  contact_number=54321, address_id=self.addr3.id, dob="1046649600", gov_id=3)
         db.session.add(self.pt1)
         db.session.add(self.pt2)
         db.session.add(self.pt3)
@@ -115,7 +114,7 @@ class TestApi(unittest.TestCase):
     def test_add_appt(self):
         auth = Placeholder()
         auth.username = self.mgr.id
-        today = time.time()
+        today = int(time.time())
         today_ts = datetime.datetime.utcfromtimestamp(int(today))
         self.pt1.add_to_org(self.mgr.org_id)
         request = MyDict()
@@ -129,8 +128,9 @@ class TestApi(unittest.TestCase):
         assert (len(appts) == 1)
         assert (appts[0].patient_id == self.pt1.id)
         assert (appts[0].appt_type == 'blah')
-        assert (appts[0].date == today_ts)
+        assert (appts[0].date == int(today)), (appts[0].date)
 
+        print appts
         failed = False
         try:
             speranza.api.appointments.add_appt(request)
@@ -157,13 +157,12 @@ class TestApi(unittest.TestCase):
         today = time.time()
         self.pt1.add_to_org(self.mgr.org_id)
         today_ts = datetime.datetime.utcfromtimestamp(float(today))
-        appt = models.Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
-
+        appt = models.Appointment(self.pt1.id, self.mgr.id, today, "blah")
         db.session.add(appt)
         db.session.commit()
 
         request = MyDict()
-        res1 = {"question": "Test question", "result": "test result"}
+        res1 = {"question": "Test question", "result": 1}
         request['user_id'] = self.pt1.id
         request['appt_id'] = appt.id
         request['survey_results'] = [res1]
@@ -241,7 +240,7 @@ class TestApi(unittest.TestCase):
         request['lastname'] = "Test"
         request['phone_number'] = "12345678"
         request['contact_number'] = "87654321"
-        request['dob'] = "01/01/2001"
+        request['dob'] = "1234566"
         request['gov_id'] = 42
         request['city_name'] = "City"
         failed = False
@@ -291,9 +290,10 @@ class TestApi(unittest.TestCase):
         auth.username = self.mgr.id
         minutedelta = datetime.timedelta(minutes=1)
 
-        today_ts = datetime.datetime.now()
-        today2_ts = today_ts + minutedelta
-        today3_ts = today_ts + minutedelta + minutedelta
+        today_ts = int(round(time.time() * 1000))
+        today2_ts = today_ts + 60000
+        today3_ts = today2_ts + 60000
+        print today_ts
         self.pt1.add_to_org(self.mgr.org_id)
         self.pt2.add_to_org(self.mgr.org_id)
         self.pt3.add_to_org(self.mgr.org_id)
@@ -316,15 +316,15 @@ class TestApi(unittest.TestCase):
         assert (len(appts) == 3), len(appts)
 
         appt_by_date = sorted(appts, key=lambda appt: appt['date'])
-        assert (appt_by_date[0]['date'] == ( today_ts - datetime.datetime(1970, 1, 1)).total_seconds())
+        assert (appt_by_date[0]['date'] == today_ts)
         assert (appt_by_date[0]['patient_name'] == self.pt1.firstname + " " + self.pt1.lastname)
         assert (appt_by_date[0]['appt_type'] == "blah")
         assert (appt_by_date[2]['patient_id'] == self.pt1.id)
-        assert (appt_by_date[2]['date'] == ( today3_ts - datetime.datetime(1970, 1, 1)).total_seconds())
+        assert (appt_by_date[2]['date'] ==  today3_ts)
         assert (appt_by_date[2]['patient_name'] == self.pt1.firstname + " " + self.pt1.lastname)
         assert (appt_by_date[2]['appt_type'] == "blah")
 
-        today4_ts = today_ts + minutedelta + minutedelta + minutedelta
+        today4_ts = today3_ts + 60000
         appt4 = models.Appointment(self.pt1.id, self.mgr.id, today4_ts, "blah")
         db.session.add(appt4)
         db.session.commit()
@@ -333,11 +333,11 @@ class TestApi(unittest.TestCase):
         assert (len(appts) == 3), len(appts)
 
         appt_by_date = sorted(appts, key=lambda appt: appt['date'])
-        assert (appt_by_date[0]['date'] == (today_ts - datetime.datetime(1970, 1, 1)).total_seconds())
+        assert (appt_by_date[0]['date'] == today_ts)
         assert (appt_by_date[0]['patient_name'] == self.pt1.firstname + " " + self.pt1.lastname)
         assert (appt_by_date[0]['appt_type'] == "blah")
         assert (appt_by_date[2]['patient_id'] == self.pt1.id)
-        assert (appt_by_date[2]['date'] == (today3_ts - datetime.datetime(1970, 1, 1)).total_seconds())
+        assert (appt_by_date[2]['date'] == today3_ts )
         assert (appt_by_date[2]['patient_name'] == self.pt1.firstname + " " + self.pt1.lastname)
         assert (appt_by_date[2]['appt_type'] == "blah")
 
@@ -369,10 +369,10 @@ class TestApi(unittest.TestCase):
         speranza.api.patients.edit_patient(request)
         pt = models.Patient.query.filter(models.Patient.id == self.pt1.id).first()
         assert (pt.contact_number == '23')
-        request['dob'] = '07/07/07'
+        request['dob'] = '1234567'
         speranza.api.patients.edit_patient(request)
         pt = models.Patient.query.filter(models.Patient.id == self.pt1.id).first()
-        assert (pt.dob == '07/07/07')
+        assert (pt.dob == 1234567), pt.dob
 
     def test_edit_patient_address(self):
         auth = Placeholder()
@@ -416,15 +416,10 @@ class TestApi(unittest.TestCase):
         request['firstname'] = 'notthere'
         request['lastname'] = 'hi'
         request['gov_id'] = 100
-        request['dob'] = '99/99/99'
+        request['dob'] = '1252454400'
 
-        failed = False
-        try:
-            speranza.api.patients.find_patient(request)
-        except Exception as e:
-            assert (type(e) == UnprocessableEntity), e
-            failed = True
-        assert failed
+        res = speranza.api.patients.find_patient(request)
+        assert(len(res['patients']) == 0), res['patients']
 
         request['firstname'] = self.pt1.firstname
         request['lastname'] = self.pt1.lastname
@@ -473,10 +468,10 @@ class TestApi(unittest.TestCase):
         request.authorization = auth
 
         self.pt1.add_to_org(self.mgr.org_id)
-        today = time.time()
+        today = int(time.time())
         # new_date = today + 1000
-        today_ts = datetime.datetime.utcfromtimestamp(int(today))
-        appt = models.Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
+        #today_ts = datetime.datetime.utcfromtimestamp(int(today))
+        appt = models.Appointment(self.pt1.id, self.mgr.id, today, "blah")
         db.session.add(appt)
         db.session.commit()
         new_date = today + 1
@@ -494,7 +489,7 @@ class TestApi(unittest.TestCase):
         changed_again = models.Appointment.query.filter(models.Appointment.patient_id == self.pt1.id).first()
         assert (changed_again.appt_type == 'changed_again')
         new_date_ts = datetime.datetime.utcfromtimestamp(int(new_date))
-        assert changed_again.date == new_date_ts
+        assert changed_again.date == new_date
 
     def test_delete_appt(self):
         auth = Placeholder()
@@ -504,9 +499,9 @@ class TestApi(unittest.TestCase):
         request = MyDict()
         request.authorization = auth
 
-        today = time.time()
+        today = int(time.time())
         today_ts = datetime.datetime.utcfromtimestamp(int(today))
-        appt = models.Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
+        appt = models.Appointment(self.pt1.id, self.mgr.id, today, "blah")
         db.session.add(appt)
         db.session.commit()
 
@@ -516,28 +511,29 @@ class TestApi(unittest.TestCase):
         appts = models.Appointment.query.filter(models.Appointment.patient_id == self.pt1.id).all()
         assert (len(appts) == 0)
 
-    def test_delete_patient(self):
-        auth = Placeholder()
-        auth.username = self.mgr.id
+    #def test_delete_patient(self):
+    #    auth = Placeholder()
+    #    auth.username = self.mgr.id
 
-        self.pt1.add_to_org(self.mgr.org_id)
+    #    self.pt1.add_to_org(self.mgr.org_id)
 
-        request = MyDict()
-        request.authorization = auth
+     #   request = MyDict()
+     #   request.authorization = auth
 
-        request['user_id'] = self.pt1.id
-        res = speranza.api.patients.delete_patient(request)
-        assert res['msg'] == 'success'
-        assert len(models.Patient.query.all()) == 2
+      #  request['user_id'] = self.pt1.id
+      #  res = speranza.api.patients.delete_patient(request)
+      #  assert res['msg'] == 'success'
+      #  assert len(models.Patient.query.all()) == 2
 
-        failed = False
-        try:
-            res = speranza.api.patients.delete_patient(request)
-            print res
-        except Exception as e:
-            assert (type(e) == UnprocessableEntity), e
-            failed = True
-        assert failed
+       # failed = False
+       # try:
+       #     res = speranza.api.patients.delete_patient(request)
+       #     print res
+       # except Exception as e:
+       #     assert (type(e) == UnprocessableEntity), e
+       #     failed = True
+       # assert failed
+
     def test_edit_manager(self):
         auth  = Placeholder()
         auth.username = self.mgr.id
@@ -886,10 +882,9 @@ class TestApi(unittest.TestCase):
         request.authorization = auth
 
         today = time.time()
-        timestamp = datetime.datetime.utcfromtimestamp(int(float(today)))
 
-        apt1 = speranza.models.Appointment(self.pt1.id, self.mgr.id, timestamp, "test")
-        apt2 = speranza.models.Appointment(self.pt2.id, self.mgr.id, timestamp, "test2")
+        apt1 = speranza.models.Appointment(self.pt1.id, self.mgr.id, today, "test")
+        apt2 = speranza.models.Appointment(self.pt2.id, self.mgr.id, today, "test2")
 
         db.session.add(apt1)
         db.session.add(apt2)
@@ -907,7 +902,7 @@ class TestApi(unittest.TestCase):
         auth = Placeholder()
         auth.username = self.mgr.id
         request.authorization = auth
-        today_ts = datetime.datetime.now()
+        today_ts = time.time()
         appt1 = models.Appointment(self.pt1.id, self.mgr.id, today_ts, "blah")
         appt2 = models.Appointment(self.pt2.id, self.mgr1.id, today_ts, "blah2")
         appt3 = models.Appointment(self.pt3.id, self.mgr.id, today_ts, "blah")

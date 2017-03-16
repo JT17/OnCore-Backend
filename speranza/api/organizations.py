@@ -210,7 +210,7 @@ def get_org_appt_types(request, debug=False):
         abort(422, "Este gerente no esta en un organizacion, por favor intenta con otra gerente")
 
     values = db.engine.execute("SELECT DISTINCT appt_type FROM appointments INNER JOIN managers ON "
-                               "appointments.manager_id == managers.id WHERE managers.org_id = :manager_org_id", manager_org_id=manager_org_id)
+                               "appointments.manager_id = managers.id WHERE managers.org_id = %d", (manager_org_id))
 
     appt_types = [val.appt_type for val in values]
     res['msg'] = 'success'

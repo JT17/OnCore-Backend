@@ -2,7 +2,7 @@
 
 from itsdangerous import BadSignature, SignatureExpired, TimedJSONWebSignatureSerializer as Serializer
 from passlib.apps import custom_app_context as pwd_context
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, BIGINT
 from datetime import timedelta, datetime
 
 from speranza.application import application, db
@@ -50,7 +50,7 @@ class Appointment(db.Model):
     id = Column(Integer, primary_key=True)
     patient_id = Column(Integer, ForeignKey('patients.id'))
     manager_id = Column(Integer, ForeignKey('managers.id'), nullable=True)
-    date = Column(DateTime, nullable=False)
+    date = Column(BIGINT, nullable=False)
     appt_type = Column(String(250), nullable=False)
     checkin = Column(Boolean, nullable=False)
     checkout = Column(Boolean, nullable=False)
@@ -66,7 +66,7 @@ class Appointment(db.Model):
     @property
     def serialize(self):
         """Return object data in easily serializable format"""
-        timestamp = (self.date - datetime(1970, 1, 1)).total_seconds()
+#        timestamp = (self.date - datetime(1970, 1, 1)).total_seconds()
         patient = Patient.query.filter(Patient.id == self.patient_id).first()
         if patient is None:
             return None
@@ -75,7 +75,7 @@ class Appointment(db.Model):
             return {
                 'id': self.id,
                 'patient_id': self.patient_id,
-                'date': timestamp,
+                'date': self.date,
                 'appt_type': self.appt_type,
                 'checkin': self.checkin,
                 'checkout': self.checkout,
@@ -93,7 +93,7 @@ class Patient(db.Model):
     phone_number = Column(String(250), nullable=False)
     contact_number = Column(String(250), nullable=True)
     address_id = Column(Integer, ForeignKey('addresses.id'), nullable=True)
-    dob = Column(DateTime, nullable=False)
+    dob = Column(BIGINT, nullable=False)
     gov_id = Column(Integer, nullable=False)
     text_regimen_id = Column(Integer, ForeignKey('text_regimens.id'), nullable=True)
     organizations = db.relationship('Organization', secondary=patient_organization_table, backref='patients')
